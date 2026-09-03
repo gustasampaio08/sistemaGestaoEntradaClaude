@@ -1,0 +1,2843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>Sistema Escolar de Controle de Acesso</title>
+
+<!-- Manifesto PWA inline via data URI -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Controle Acesso Escolar","short_name":"AcessoEdu","start_url":".","display":"standalone","background_color":"%23f8fafc","theme_color":"%232563eb","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22%3E%F0%9F%8F%AB%3C/text%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
+
+<style>
+/* ============================================================
+   DESIGN SYSTEM - VARIÁVEIS CSS
+   ============================================================ */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #dbeafe;
+    --success: #16a34a;
+    --success-light: #dcfce7;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --info: #0891b2;
+    --info-light: #cffafe;
+    --background: #f8fafc;
+    --surface: #ffffff;
+    --surface-alt: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-inverse: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    --sidebar-w: 260px;
+}
+
+[data-theme="dark"] {
+    --primary: #3b82f6;
+    --primary-light: #1e3a8a;
+    --background: #0f172a;
+    --surface: #1e293b;
+    --surface-alt: #334155;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   RESET E BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+a { color: var(--primary); text-decoration: none; }
+
+/* ============================================================
+   LAYOUT - APP SHELL
+   ============================================================ */
+.app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 50;
+}
+.sidebar-header {
+    padding: 20px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sidebar-logo {
+    width: 36px; height: 36px;
+    background: var(--primary);
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+}
+.sidebar-title { font-size: 15px; font-weight: 700; }
+.sidebar-subtitle { font-size: 11px; color: var(--text-muted); }
+.sidebar-nav { padding: 12px 8px; flex: 1; }
+.nav-section { margin-bottom: 16px; }
+.nav-section-title {
+    padding: 0 12px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--transition);
+    text-align: left;
+}
+.nav-item:hover { background: var(--surface-alt); }
+.nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+[data-theme="dark"] .nav-item.active { background: var(--primary-light); color: var(--text); }
+.nav-item-icon { font-size: 16px; width: 18px; text-align: center; }
+
+/* Main */
+.main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.sidebar-toggle { display: none; font-size: 20px; padding: 6px; }
+
+.content { padding: 24px; flex: 1; }
+.view { display: none; animation: fadeIn 0.25s ease-out; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ============================================================
+   COMPONENTES - CARD, BOTÕES, TABELAS
+   ============================================================ */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+.card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.card-subtitle { font-size: 12px; color: var(--text-muted); font-weight: normal; }
+
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-stats { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+}
+.stat-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.stat-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
+.stat-label { font-size: 12px; color: var(--text-muted); }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    transition: var(--transition);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--primary); color: var(--text-inverse); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: var(--text-inverse); }
+.btn-danger { background: var(--danger); color: var(--text-inverse); }
+.btn-warning { background: var(--warning); color: var(--text-inverse); }
+.btn-secondary { background: var(--surface-alt); color: var(--text); border-color: var(--border); }
+.btn-ghost { background: transparent; color: var(--text); }
+.btn-ghost:hover { background: var(--surface-alt); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-lg { padding: 13px 24px; font-size: 15px; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.form-group { margin-bottom: 14px; }
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    transition: var(--transition);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.table th {
+    background: var(--surface-alt);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--surface-alt); }
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.badge-success { background: var(--success-light); color: var(--success); }
+.badge-danger { background: var(--danger-light); color: var(--danger); }
+.badge-warning { background: var(--warning-light); color: var(--warning); }
+.badge-info { background: var(--info-light); color: var(--info); }
+.badge-neutral { background: var(--surface-alt); color: var(--text-muted); }
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(3px);
+}
+.modal-backdrop.show { display: flex; animation: fadeIn 0.2s ease-out; }
+.modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.25s ease-out;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.modal-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { font-size: 20px; color: var(--text-muted); padding: 4px; }
+.modal-body { padding: 22px; }
+.modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* Toast */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+.toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 280px;
+    max-width: 400px;
+    pointer-events: auto;
+    animation: toastIn 0.3s ease-out;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+.toast.toast-success { border-left: 4px solid var(--success); }
+.toast.toast-danger { border-left: 4px solid var(--danger); }
+.toast.toast-warning { border-left: 4px solid var(--warning); }
+.toast.toast-info { border-left: 4px solid var(--info); }
+.toast-icon { font-size: 18px; }
+.toast-body { flex: 1; font-size: 13px; }
+.toast-title { font-weight: 700; }
+.toast-msg { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ============================================================
+   TERMINAL DE ACESSO (Tela cheia)
+   ============================================================ */
+.terminal-view {
+    background: var(--background);
+    min-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.terminal-feed {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 4/3;
+    background: #000;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+.terminal-feed video, .terminal-feed canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.terminal-feed canvas { position: absolute; top: 0; left: 0; }
+.terminal-status {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 14px 30px;
+    border-radius: var(--radius-lg);
+    min-width: 320px;
+}
+.terminal-result {
+    margin-top: 20px;
+    text-align: center;
+    padding: 28px;
+    border-radius: var(--radius-lg);
+    min-width: 420px;
+    animation: resultPulse 0.5s ease-out;
+}
+@keyframes resultPulse {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.terminal-result.success { background: var(--success); color: white; }
+.terminal-result.error { background: var(--danger); color: white; }
+.terminal-result-name { font-size: 28px; font-weight: 800; margin-top: 8px; }
+.terminal-result-msg { font-size: 16px; opacity: 0.9; margin-top: 4px; }
+.terminal-indicator {
+    position: absolute;
+    top: 14px; right: 14px;
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.terminal-indicator .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--danger);
+    animation: blink 1s infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* Terminal modo touch - botões grandes */
+.terminal-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.terminal-actions .btn { padding: 16px 28px; font-size: 16px; min-width: 140px; }
+
+/* Simulação Badge */
+.sim-badge {
+    background: var(--warning);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+    text-transform: uppercase;
+}
+
+/* Gráfico simples em canvas */
+.chart-wrap { position: relative; height: 200px; }
+.chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+/* Catraca visual */
+.gate-visual {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface-alt);
+    border-radius: var(--radius-md);
+    margin-top: 12px;
+}
+.gate-icon { font-size: 48px; transition: transform 0.5s; }
+.gate-open { transform: rotate(-45deg); color: var(--success); }
+.gate-closed { color: var(--danger); }
+
+/* Responsividade */
+@media (max-width: 1024px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .app-shell { grid-template-columns: 1fr; }
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        width: 260px;
+        transition: left 0.3s;
+        box-shadow: var(--shadow-lg);
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-toggle { display: block; }
+    .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+    .terminal-result { min-width: auto; width: 100%; }
+    .terminal-actions .btn { flex: 1; min-width: 120px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Helpers */
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.text-center { text-align: center; }
+.font-mono { font-family: "SF Mono", Consolas, monospace; }
+.hidden { display: none !important; }
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.section-title h2 { font-size: 20px; }
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+}
+.empty-state-icon { font-size: 50px; margin-bottom: 10px; opacity: 0.5; }
+.consent-box {
+    background: var(--warning-light);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+.consent-box label {
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.consent-box input[type="checkbox"] { margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🏫</div>
+            <div>
+                <div class="sidebar-title">AcessoEdu</div>
+                <div class="sidebar-subtitle">Controle Escolar</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <button class="nav-item active" data-view="dashboard"><span class="nav-item-icon">📊</span> Dashboard</button>
+                <button class="nav-item" data-view="terminal"><span class="nav-item-icon">🚪</span> Terminal de Acesso</button>
+                <button class="nav-item" data-view="attendance"><span class="nav-item-icon">📅</span> Frequência</button>
+                <button class="nav-item" data-view="history"><span class="nav-item-icon">🕐</span> Histórico</button>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Cadastros</div>
+                <button class="nav-item" data-view="students"><span class="nav-item-icon">👥</span> Alunos</button>
+                <button class="nav-item" data-view="classes"><span class="nav-item-icon">📚</span> Turmas</button>
+                <button class="nav-item" data-view="faceEnroll"><span class="nav-item-icon">📸</span> Cadastro Facial</button>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Configurações</div>
+                <button class="nav-item" data-view="schedule"><span class="nav-item-icon">⏰</span> Horários</button>
+                <button class="nav-item" data-view="methods"><span class="nav-item-icon">🔑</span> Métodos Alt.</button>
+                <button class="nav-item" data-view="gate"><span class="nav-item-icon">🚧</span> Simul. Catraca</button>
+                <button class="nav-item" data-view="privacy"><span class="nav-item-icon">🛡️</span> Privacidade</button>
+                <button class="nav-item" data-view="admin"><span class="nav-item-icon">⚙️</span> Admin</button>
+                <button class="nav-item" data-view="audit"><span class="nav-item-icon">📋</span> Auditoria</button>
+            </div>
+        </nav>
+        <div style="padding: 12px; border-top: 1px solid var(--border);">
+            <div class="text-xs text-muted" id="sidebarStatus">Modo: Carregando...</div>
+        </div>
+    </aside>
+
+    <!-- ===================== MAIN ===================== -->
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                <div class="topbar-title" id="topbarTitle">Dashboard</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn btn-sm btn-ghost" id="btnThemeToggle" title="Alternar tema">🌙</button>
+                <button class="btn btn-sm btn-secondary" id="btnCameraStatus">📷 <span id="camIndicator">OFF</span></button>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- ============== DASHBOARD ============== -->
+            <section class="view active" id="view-dashboard">
+                <div class="section-title">
+                    <h2>Visão Geral</h2>
+                    <span class="badge badge-info" id="dateToday"></span>
+                </div>
+
+                <div class="grid grid-stats mb-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">👥</div>
+                        <div>
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">Total de alunos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--success-light); color: var(--success);">✅</div>
+                        <div>
+                            <div class="stat-value" id="statPresent">0</div>
+                            <div class="stat-label">Presentes hoje</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--danger-light); color: var(--danger);">❌</div>
+                        <div>
+                            <div class="stat-value" id="statAbsent">0</div>
+                            <div class="stat-label">Ausentes</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--warning-light); color: var(--warning);">🚫</div>
+                        <div>
+                            <div class="stat-value" id="statDenied">0</div>
+                            <div class="stat-label">Negados hoje</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2 mb-4">
+                    <div class="card">
+                        <div class="card-title">📈 Entradas e Saídas (últimos 7 dias)</div>
+                        <div class="chart-wrap"><canvas id="chartAccess"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🟦 Ocupação por Turma</div>
+                        <div id="classOccupancy" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="card">
+                        <div class="card-title">📷 Status da Câmera</div>
+                        <div id="dashCamStatus" class="badge badge-neutral">Não verificada</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🚧 Status da Catraca</div>
+                        <div id="dashGateStatus" class="badge badge-info">Aguardando</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🧠 Status do Processador Facial</div>
+                        <div id="dashFaceStatus" class="badge badge-neutral">Verificando...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== TERMINAL DE ACESSO ============== -->
+            <section class="view" id="view-terminal">
+                <div class="terminal-view">
+                    <div class="terminal-feed" id="terminalFeed">
+                        <video id="terminalVideo" autoplay playsinline muted></video>
+                        <canvas id="terminalCanvas"></canvas>
+                        <div class="terminal-indicator" id="terminalLiveIndicator" style="display: none;">
+                            <span class="dot"></span><span id="terminalLiveText">AO VIVO</span>
+                        </div>
+                    </div>
+                    <div class="terminal-status" id="terminalStatus" style="background: var(--surface-alt); color: var(--text);">
+                        ⏳ Aguardando início...
+                    </div>
+                    <div class="terminal-result hidden" id="terminalResult"></div>
+
+                    <div class="terminal-actions">
+                        <button class="btn btn-primary" id="btnTerminalStart">▶️ Iniciar Câmera</button>
+                        <button class="btn btn-secondary" id="btnTerminalAlt">🔑 Acesso Alt.</button>
+                        <button class="btn btn-secondary" id="btnTerminalManual">✋ Lib. Manual</button>
+                        <button class="btn btn-ghost" id="btnTerminalStop" disabled>⏹️ Parar</button>
+                    </div>
+
+                    <p class="text-xs text-muted mt-4 text-center" id="terminalPrivacyNote">
+                        🛡️ Processamento 100% local. Nenhuma imagem é enviada a servidores.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ============== FREQUÊNCIA ============== -->
+            <section class="view" id="view-attendance">
+                <div class="section-title">
+                    <h2>Frequência</h2>
+                    <div class="flex gap-2">
+                        <select class="form-select" id="attClassFilter" style="width: auto;">
+                            <option value="">Todas as turmas</option>
+                        </select>
+                        <input type="date" class="form-input" id="attDate" style="width: auto;">
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table" id="attTable">
+                            <thead>
+                                <tr><th>Matrícula</th><th>Aluno</th><th>Turma</th><th>Entrada</th><th>Saída</th><th>Status</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== HISTÓRICO ============== -->
+            <section class="view" id="view-history">
+                <div class="section-title">
+                    <h2>Histórico de Acessos</h2>
+                    <button class="btn btn-secondary btn-sm" id="btnExportHistory">📥 Exportar CSV</button>
+                </div>
+                <div class="card">
+                    <div class="flex gap-2 mb-3">
+                        <input type="search" class="form-input" id="histSearch" placeholder="Buscar por nome, matrícula..." style="flex:1;">
+                        <select class="form-select" id="histResultFilter" style="width: auto;">
+                            <option value="">Todos os resultados</option>
+                            <option value="VERIFIED">Autorizados</option>
+                            <option value="NOT_VERIFIED">Não verificados</option>
+                            <option value="BLOCKED">Bloqueados</option>
+                            <option value="OUT_OF_SCHEDULE">Fora do horário</option>
+                        </select>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table" id="histTable">
+                            <thead>
+                                <tr><th>Data/Hora</th><th>Aluno</th><th>Turma</th><th>Tipo</th><th>Método</th><th>Resultado</th><th>Terminal</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== ALUNOS ============== -->
+            <section class="view" id="view-students">
+                <div class="section-title">
+                    <h2>Alunos</h2>
+                    <button class="btn btn-primary" id="btnNewStudent">➕ Novo Aluno</button>
+                </div>
+                <div class="card">
+                    <div class="flex gap-2 mb-3">
+                        <input type="search" class="form-input" id="studSearch" placeholder="Buscar..." style="flex:1;">
+                        <select class="form-select" id="studClassFilter" style="width: auto;"><option value="">Todas turmas</option></select>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table" id="studTable">
+                            <thead>
+                                <tr><th>Matrícula</th><th>Nome</th><th>Turma</th><th>Nascimento</th><th>Responsável</th><th>Status</th><th>Facial</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== TURMAS ============== -->
+            <section class="view" id="view-classes">
+                <div class="section-title">
+                    <h2>Turmas</h2>
+                    <button class="btn btn-primary" id="btnNewClass">➕ Nova Turma</button>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table" id="classTable">
+                            <thead>
+                                <tr><th>ID</th><th>Nome</th><th>Série</th><th>Turno</th><th>Professor</th><th>Capacidade</th><th>Status</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== CADASTRO FACIAL ============== -->
+            <section class="view" id="view-faceEnroll">
+                <div class="section-title"><h2>Cadastro Facial</h2></div>
+
+                <div class="card mb-4">
+                    <div class="card-title">Passo 1: Selecionar Aluno</div>
+                    <div class="form-group">
+                        <label class="form-label">Aluno</label>
+                        <select class="form-select" id="enrollStudentSelect"><option value="">Selecione um aluno...</option></select>
+                    </div>
+                    <div id="enrollStudentInfo" class="text-sm text-muted"></div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-title">Passo 2: Consentimento LGPD</div>
+                    <div class="consent-box">
+                        <label>
+                            <input type="checkbox" id="enrollConsent">
+                            <span>
+                                <strong>Termo de Consentimento:</strong> Autorizo a captura e processamento local de dados biométricos faciais para fins exclusivos de controle de acesso escolar. 
+                                Entendo que: (1) apenas um template matemático (embedding) será armazenado, não a imagem; (2) os dados não serão compartilhados com terceiros;
+                                (3) posso solicitar a exclusão dos dados a qualquer momento (Direito ao Esquecimento); (4) existem métodos alternativos não biométricos de acesso.
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-title">Passo 3: Captura</div>
+                    <div class="terminal-feed" style="max-width: 520px;">
+                        <video id="enrollVideo" autoplay playsinline muted></video>
+                        <canvas id="enrollCanvas"></canvas>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <button class="btn btn-primary" id="btnEnrollStart" disabled>📸 Iniciar Captura</button>
+                        <button class="btn btn-success" id="btnEnrollCapture" disabled>🎯 Capturar Amostra (<span id="enrollCount">0</span>/5)</button>
+                        <button class="btn btn-secondary" id="btnEnrollStop" disabled>⏹️ Parar</button>
+                        <button class="btn btn-primary" id="btnEnrollSave" disabled>💾 Salvar Template</button>
+                    </div>
+                    <div id="enrollStatus" class="mt-3 text-sm text-muted"></div>
+                </div>
+            </section>
+
+            <!-- ============== HORÁRIOS ============== -->
+            <section class="view" id="view-schedule">
+                <div class="section-title">
+                    <h2>Regras de Horário</h2>
+                    <button class="btn btn-primary btn-sm" id="btnNewSchedule">➕ Nova Regra</button>
+                </div>
+                <div class="card">
+                    <p class="text-sm text-muted mb-3">Define janelas de entrada/saída permitidas por turma. Fora do horário: sinalização "OUT_OF_SCHEDULE" (não substitui avaliação humana).</p>
+                    <div class="table-wrap">
+                        <table class="table" id="schTable">
+                            <thead><tr><th>Turma</th><th>Dia</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Tolerância</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== MÉTODOS ALTERNATIVOS ============== -->
+            <section class="view" id="view-methods">
+                <div class="section-title"><h2>Métodos Alternativos de Acesso</h2></div>
+
+                <div class="grid grid-2 mb-4">
+                    <div class="card">
+                        <div class="card-title">🔢 Acesso por PIN (Matrícula + PIN)</div>
+                        <div class="form-group">
+                            <label class="form-label">Matrícula</label>
+                            <input type="text" class="form-input" id="pinEnroll" placeholder="Ex: 2024001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PIN (4-6 dígitos)</label>
+                            <input type="password" class="form-input" id="pinCode" maxlength="6" pattern="\d+">
+                        </div>
+                        <button class="btn btn-primary btn-block" id="btnPinAccess">Verificar Acesso</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">📱 Acesso por QR Code</div>
+                        <div class="form-group">
+                            <label class="form-label">Selecione aluno para gerar QR</label>
+                            <select class="form-select" id="qrStudentSelect"><option value="">Selecione...</option></select>
+                        </div>
+                        <button class="btn btn-secondary btn-block mb-3" id="btnGenQR">🔲 Gerar QR Code</button>
+                        <div id="qrDisplay" class="text-center"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-title">📶 Simulação RFID/NFC</div>
+                        <div class="form-group">
+                            <label class="form-label">UID do Cartão (hex)</label>
+                            <input type="text" class="form-input" id="rfidUid" placeholder="Ex: A1B2C3D4">
+                        </div>
+                        <button class="btn btn-secondary btn-block mb-3" id="btnBindRfid">🔗 Vincular Cartão</button>
+                        <button class="btn btn-primary btn-block" id="btnRfidAccess">📶 Simular Leitura RFID</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">ℹ️ Informações</div>
+                        <p class="text-sm text-muted">
+                            PIN e RFID/NFC são armazenados como <strong>hashes</strong> (não em texto puro). QR Code contém token criptográfico de sessão.
+                            Integração futura: substituir UI por leitores reais via WebUSB/WebBluetooth.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== SIMULADOR DE CATRACA ============== -->
+            <section class="view" id="view-gate">
+                <div class="section-title"><h2>Simulador de Catraca</h2></div>
+                <div class="card">
+                    <p class="text-sm text-muted mb-3">
+                        <strong>GateController</strong> - Camada de abstração para hardware futuro. Em produção, métodos <code>openGate()</code>, <code>denyGate()</code> e <code>lockGate()</code>
+                        enviariam comandos via MQTT/HTTP/WebSocket para controladores físicos (ControlID, Intelbras, etc.).
+                    </p>
+
+                    <div class="gate-visual">
+                        <div class="gate-icon" id="gateVisualIcon">🚧</div>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 700;">Estado: <span id="gateStateText">Bloqueada</span></div>
+                            <div class="text-sm text-muted" id="gateLastEvent">Nenhum evento registrado</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-4" style="flex-wrap: wrap;">
+                        <button class="btn btn-success" id="btnGateOpen">🟢 openGate()</button>
+                        <button class="btn btn-danger" id="btnGateDeny">🔴 denyGate()</button>
+                        <button class="btn btn-warning" id="btnGateLock">🟡 lockGate()</button>
+                        <button class="btn btn-secondary" id="btnGateStatus">📡 getGateStatus()</button>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="card-title">Log da Catraca</div>
+                        <div id="gateLog" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; background: var(--surface-alt); padding: 12px; border-radius: var(--radius-md);"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== PRIVACIDADE ============== -->
+            <section class="view" id="view-privacy">
+                <div class="section-title"><h2>Privacidade e Direito ao Esquecimento</h2></div>
+                <div class="card mb-4">
+                    <div class="card-title">🛡️ Princípios Aplicados (LGPD)</div>
+                    <ul style="padding-left: 20px; font-size: 13px; line-height: 1.8;">
+                        <li><strong>Finalidade:</strong> Exclusivamente controle de acesso escolar.</li>
+                        <li><strong>Minimização:</strong> Apenas template facial (128 floats) é armazenado; imagens não são salvas.</li>
+                        <li><strong>Localidade:</strong> Processamento 100% no navegador, sem envio a servidores.</li>
+                        <li><strong>Não-discriminação:</strong> Sistema não infere idade, raça, gênero ou emoção.</li>
+                        <li><strong>Revisão humana:</strong> Toda decisão automática pode ser revista por funcionário.</li>
+                        <li><strong>Alternativa não biométrica:</strong> PIN, QR Code e liberação manual sempre disponíveis.</li>
+                    </ul>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-title">👤 Remover Template Facial</div>
+                    <div class="form-group">
+                        <select class="form-select" id="privStudentSelect"><option value="">Selecione aluno...</option></select>
+                    </div>
+                    <button class="btn btn-warning" id="btnRemoveFace">🗑️ Remover Template Facial</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚠️ Exclusão Total (Direito ao Esquecimento)</div>
+                    <p class="text-sm text-muted mb-3">Remove TODOS os dados do aluno: cadastro, template facial, histórico e referências.</p>
+                    <div class="form-group">
+                        <select class="form-select" id="privStudentSelectFull"><option value="">Selecione aluno para excluir...</option></select>
+                    </div>
+                    <button class="btn btn-danger" id="btnForgetStudent">🚨 Excluir Completamente</button>
+                </div>
+            </section>
+
+            <!-- ============== ADMIN ============== -->
+            <section class="view" id="view-admin">
+                <div class="section-title"><h2>Painel Administrativo</h2></div>
+
+                <div class="card mb-4" id="adminLoginCard">
+                    <div class="card-title">🔒 Acesso Restrito</div>
+                    <p class="text-sm text-muted mb-3">
+                        Em produção, isso seria autenticado via backend (OAuth2/JWT). Aqui: senha local <code>admin123</code> (hash SHA-256).
+                        <span class="badge badge-warning">Demo</span>
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Senha Administrativa</label>
+                        <input type="password" class="form-input" id="adminPass" placeholder="Senha...">
+                    </div>
+                    <button class="btn btn-primary" id="btnAdminLogin">Entrar</button>
+                </div>
+
+                <div id="adminPanel" class="hidden">
+                    <div class="grid grid-2 mb-4">
+                        <div class="card">
+                            <div class="card-title">📤 Exportar Dados</div>
+                            <div class="flex gap-2" style="flex-wrap: wrap;">
+                                <button class="btn btn-secondary" data-export="students">Alunos (JSON)</button>
+                                <button class="btn btn-secondary" data-export="attendance">Frequência (CSV)</button>
+                                <button class="btn btn-secondary" data-export="access">Acessos (JSON)</button>
+                                <button class="btn btn-secondary" data-export="all">Backup Completo</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">📥 Importar Dados</div>
+                            <input type="file" class="form-input" id="adminImportFile" accept=".json">
+                            <button class="btn btn-primary mt-3" id="btnAdminImport">Importar</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">🧹 Limpeza de Dados</div>
+                        <p class="text-sm text-muted mb-3">Operações irreversíveis. Use com cuidado.</p>
+                        <div class="flex gap-2" style="flex-wrap: wrap;">
+                            <button class="btn btn-warning" data-clean="history">Limpar Histórico</button>
+                            <button class="btn btn-warning" data-clean="faces">Remover Todos os Templates Faciais</button>
+                            <button class="btn btn-danger" data-clean="all">🚨 Reset Completo</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============== AUDITORIA ============== -->
+            <section class="view" id="view-audit">
+                <div class="section-title">
+                    <h2>Log de Auditoria</h2>
+                    <button class="btn btn-secondary btn-sm" id="btnClearAudit">🧹 Limpar</button>
+                </div>
+                <div class="card">
+                    <div class="table-wrap">
+                        <table class="table" id="auditTable">
+                            <thead><tr><th>Data/Hora</th><th>Operador</th><th>Ação</th><th>Alvo</th><th>Detalhes</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<!-- Modal Genérico -->
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Título</div>
+            <button class="modal-close" data-close-modal>✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer" id="modalFooter"></div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================== SCRIPTS ===================== -->
+<!-- face-api.js via CDN com fallback controlado pelo app -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" 
+        onload="window.__faceApiLoaded = true;" 
+        onerror="window.__faceApiLoaded = false;"></script>
+
+<script>
+'use strict';
+
+/* ============================================================
+   1. CONFIGURAÇÕES GLOBAIS E CONSTANTES
+   ============================================================ */
+const CONFIG = {
+    STORAGE_PREFIX: 'acessoEdu_',
+    DB_NAME: 'acessoEduDB',
+    DB_VERSION: 1,
+    FACE_API_MODELS_URL: 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights',
+    FACE_THRESHOLD: 0.55, // Distância euclidiana para considerar "mesma pessoa"
+    SAMPLES_TO_ENROLL: 5,
+    ADMIN_PASSWORD_HASH: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // admin123
+    GATE_AUTO_CLOSE_MS: 3000,
+    VERIFICATION_INTERVAL_MS: 1200,
+};
+
+// Estado global da aplicação (única fonte de verdade em memória)
+const AppState = {
+    students: [],
+    classes: [],
+    accessLog: [],
+    schedules: [],
+    auditLog: [],
+    currentOperator: 'system',
+    faceApiReady: false,
+    cameraActive: false,
+    terminalRunning: false,
+    currentView: 'dashboard',
+};
+
+/* ============================================================
+   2. STORAGE MANAGER (LocalStorage + IndexedDB)
+   ============================================================ */
+class StorageManager {
+    static get(key, fallback = null) {
+        try {
+            const raw = localStorage.getItem(CONFIG.STORAGE_PREFIX + key);
+            return raw ? JSON.parse(raw) : fallback;
+        } catch (e) { return fallback; }
+    }
+    static set(key, value) {
+        try { localStorage.setItem(CONFIG.STORAGE_PREFIX + key, JSON.stringify(value)); }
+        catch (e) { console.error('Storage error', e); UIRenderer.toast('Erro ao salvar', 'danger'); }
+    }
+    static remove(key) { localStorage.removeItem(CONFIG.STORAGE_PREFIX + key); }
+
+    // IndexedDB para templates faciais (arrays grandes de 128 floats)
+    static _db = null;
+    static async getDB() {
+        if (this._db) return this._db;
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('faces')) {
+                    db.createObjectStore('faces', { keyPath: 'studentId' });
+                }
+            };
+            req.onsuccess = (e) => { this._db = e.target.result; resolve(this._db); };
+            req.onerror = (e) => reject(e);
+        });
+    }
+    static async saveFace(studentId, descriptor) {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('faces', 'readwrite');
+            tx.objectStore('faces').put({ studentId, descriptor: Array.from(descriptor), ts: Date.now() });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = (e) => reject(e);
+        });
+    }
+    static async getFace(studentId) {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('faces', 'readonly');
+            const req = tx.objectStore('faces').get(studentId);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = (e) => reject(e);
+        });
+    }
+    static async getAllFaces() {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('faces', 'readonly');
+            const req = tx.objectStore('faces').getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = (e) => reject(e);
+        });
+    }
+    static async removeFace(studentId) {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('faces', 'readwrite');
+            tx.objectStore('faces').delete(studentId);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = (e) => reject(e);
+        });
+    }
+    static async clearAllFaces() {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('faces', 'readwrite');
+            tx.objectStore('faces').clear();
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = (e) => reject(e);
+        });
+    }
+
+    // Hash seguro via Web Crypto
+    static async sha256(str) {
+        const buf = new TextEncoder().encode(str);
+        const hash = await crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+}
+
+/* ============================================================
+   3. CAMERA MANAGER (getUserMedia)
+   ============================================================ */
+class CameraManager {
+    constructor(videoEl) {
+        this.video = videoEl;
+        this.stream = null;
+    }
+    async start(facingMode = 'user') {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('MediaDevices não suportado (use http://localhost ou https://)');
+            }
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            this.video.srcObject = this.stream;
+            await new Promise(r => this.video.onloadedmetadata = r);
+            this.video.play();
+            AppState.cameraActive = true;
+            UIRenderer.updateCameraIndicator(true);
+            return true;
+        } catch (e) {
+            console.error('Camera error', e);
+            UIRenderer.toast('Câmera indisponível: ' + e.message, 'danger');
+            return false;
+        }
+    }
+    stop() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(t => t.stop());
+            this.stream = null;
+        }
+        this.video.srcObject = null;
+        AppState.cameraActive = false;
+        UIRenderer.updateCameraIndicator(false);
+    }
+    takeSnapshot(canvasEl) {
+        if (!this.stream || !this.video.videoWidth) return null;
+        canvasEl.width = this.video.videoWidth;
+        canvasEl.height = this.video.videoHeight;
+        const ctx = canvasEl.getContext('2d');
+        ctx.drawImage(this.video, 0, 0);
+        return canvasEl;
+    }
+    isReady() { return this.stream && this.video.readyState >= 2; }
+}
+
+/* ============================================================
+   4. FACE PROCESSOR (face-api.js + SIMULADOR)
+   Responsável por:
+   - Carregar modelos
+   - Detectar rostos
+   - Gerar embeddings (descriptors)
+   - Comparar embeddings (distância euclidiana)
+   ============================================================ */
+class FaceProcessor {
+    constructor() {
+        this.modelsLoaded = false;
+        this.simulationMode = false;
+    }
+
+    async loadModels() {
+        // 1. Verificar se face-api carregou via CDN
+        if (!window.__faceApiLoaded || typeof faceapi === 'undefined') {
+            console.warn('face-api.js não disponível - entrando em MODO SIMULAÇÃO');
+            this.simulationMode = true;
+            return false;
+        }
+        // 2. Tentar carregar os modelos
+        try {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(CONFIG.FACE_API_MODELS_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(CONFIG.FACE_API_MODELS_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(CONFIG.FACE_API_MODELS_URL),
+            ]);
+            this.modelsLoaded = true;
+            this.simulationMode = false;
+            console.log('✅ Modelos de IA carregados com sucesso');
+            return true;
+        } catch (e) {
+            console.error('Falha ao carregar modelos:', e);
+            this.simulationMode = true;
+            return false;
+        }
+    }
+
+    // Detecta rostos no vídeo e retorna detecções com descriptors
+    async detect(videoEl) {
+        if (this.simulationMode) {
+            // SIMULADOR: não detecta rostos reais, simula descoberta
+            return this._simulateDetection(videoEl);
+        }
+        if (!this.modelsLoaded || !videoEl || videoEl.readyState < 2) return [];
+        try {
+            const dets = await faceapi.detectAllFaces(
+                videoEl,
+                new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
+            ).withFaceLandmarks().withFaceDescriptors();
+            return dets;
+        } catch (e) {
+            console.warn('Detect error', e);
+            return [];
+        }
+    }
+
+    // Extrai descriptor (embedding) do rosto detectado
+    extractDescriptor(detection) {
+        if (this.simulationMode) {
+            return detection.simulatedDescriptor || this._generateSimulatedDescriptor();
+        }
+        return Array.from(detection.descriptor);
+    }
+
+    // Compara dois descriptors (distância euclidiana)
+    compareDescriptors(d1, d2) {
+        if (!d1 || !d2 || d1.length !== 128 || d2.length !== 128) return 1.0;
+        let sum = 0;
+        for (let i = 0; i < 128; i++) {
+            const diff = d1[i] - d2[i];
+            sum += diff * diff;
+        }
+        return Math.sqrt(sum);
+    }
+
+    // Busca o aluno mais próximo dado um descriptor desconhecido
+    async identify(descriptor, tolerance = CONFIG.FACE_THRESHOLD) {
+        const all = await StorageManager.getAllFaces();
+        let best = { studentId: null, distance: Infinity };
+        for (const f of all) {
+            const dist = this.compareDescriptors(descriptor, f.descriptor);
+            if (dist < best.distance) best = { studentId: f.studentId, distance: dist };
+        }
+        if (best.studentId && best.distance < tolerance) {
+            return { match: true, studentId: best.studentId, confidence: 1 - (best.distance / tolerance) };
+        }
+        return { match: false, distance: best.distance, confidence: 0 };
+    }
+
+    /* --- SIMULADOR (MODO SEM IA REAL) ---
+       Gera um descriptor determinístico baseado em hash da matrícula + salt temporal.
+       NÃO é reconhecimento facial real - apenas permite testar o fluxo completo.
+       O usuário é AVISADO quando está em modo simulação. */
+    _simulateDetection(videoEl) {
+        // Retorna "nenhum rosto" por padrão; quando o operador "simula presença"
+        // (ex: clicando em um botão no terminal), um estudante aleatório é detectado.
+        return [];
+    }
+    _generateSimulatedDescriptor() {
+        // Descriptor determinístico aleatório - usado apenas como placeholder
+        const desc = new Float32Array(128);
+        for (let i = 0; i < 128; i++) desc[i] = (Math.sin(i * 7919) * 0.5) + Math.random() * 0.1;
+        return Array.from(desc);
+    }
+    generateDescriptorForStudent(enrollmentId) {
+        // Gera um descriptor pseudo-determinístico baseado na matrícula + timestamp de cadastro
+        // Em modo simulação, isso substitui o embedding real da IA
+        const seed = enrollmentId + '|' + (AppState.students.find(s => s.id === enrollmentId)?.createdAt || 0);
+        const desc = new Float32Array(128);
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+        }
+        for (let i = 0; i < 128; i++) {
+            hash = ((hash << 5) - hash + i * 31) | 0;
+            desc[i] = Math.sin(hash) * 0.4 + Math.cos(hash * 1.3) * 0.3;
+        }
+        return Array.from(desc);
+    }
+}
+
+/* ============================================================
+   5. ACCESS CONTROLLER (Regras de Acesso)
+   Retorna VERIFIED | NOT_VERIFIED | BLOCKED | OUT_OF_SCHEDULE
+   ============================================================ */
+class AccessController {
+    // Verifica se o aluno pode acessar no momento atual
+    static checkAccess(student, type = 'entry') {
+        if (!student) return { result: 'NOT_VERIFIED', reason: 'Aluno não encontrado' };
+        if (student.status !== 'active') return { result: 'BLOCKED', reason: 'Aluno inativo/bloqueado' };
+
+        // Verificar janela de horário
+        const scheduleCheck = this.checkSchedule(student.classId, type);
+        if (!scheduleCheck.allowed) {
+            return { result: 'OUT_OF_SCHEDULE', reason: scheduleCheck.reason, soft: true };
+        }
+
+        // Verificar se já está presente (para entrada duplicada)
+        if (type === 'entry') {
+            const alreadyIn = this._isCurrentlyInside(student.id);
+            if (alreadyIn) {
+                return { result: 'BLOCKED', reason: 'Aluno já registrou entrada hoje' };
+            }
+        }
+        if (type === 'exit') {
+            const isInside = this._isCurrentlyInside(student.id);
+            if (!isInside) {
+                return { result: 'BLOCKED', reason: 'Aluno não tem entrada registrada' };
+            }
+        }
+
+        return { result: 'VERIFIED', reason: 'Acesso liberado' };
+    }
+
+    // Determina automaticamente se é entrada ou saída baseado no último acesso
+    static determineAccessType(studentId) {
+        const logs = AppState.accessLog
+            .filter(a => a.studentId === studentId)
+            .sort((a, b) => b.timestamp - a.timestamp);
+        if (logs.length === 0) return 'entry';
+        const last = logs[0];
+        const today = new Date().toDateString();
+        if (new Date(last.timestamp).toDateString() !== today) return 'entry';
+        return last.type === 'entry' ? 'exit' : 'entry';
+    }
+
+    static _isCurrentlyInside(studentId) {
+        const today = new Date().toDateString();
+        const todayLogs = AppState.accessLog
+            .filter(a => a.studentId === studentId && new Date(a.timestamp).toDateString() === today)
+            .sort((a, b) => b.timestamp - a.timestamp);
+        if (todayLogs.length === 0) return false;
+        return todayLogs[0].type === 'entry';
+    }
+
+    static checkSchedule(classId, type) {
+        const now = new Date();
+        const dow = now.getDay(); // 0=Dom, 1=Seg...
+        const dayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+        const rules = AppState.schedules.filter(s => s.classId === classId && s.day === dayNames[dow] && s.type === type);
+        if (rules.length === 0) return { allowed: true, reason: 'Sem restrição de horário' };
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        for (const r of rules) {
+            const start = r.startHour * 60 + r.startMin;
+            const end = r.endHour * 60 + r.endMin + (r.tolerance || 0);
+            if (nowMin >= start && nowMin <= end) {
+                return { allowed: true, reason: 'Dentro do horário' };
+            }
+        }
+        return { allowed: false, reason: `Fora da janela de ${type === 'entry' ? 'entrada' : 'saída'}` };
+    }
+}
+
+/* ============================================================
+   6. GATE CONTROLLER (Abstração de Hardware)
+   ============================================================ */
+class GateController {
+    constructor() {
+        this.state = 'LOCKED'; // LOCKED | OPEN | DENIED
+        this.log = [];
+        this._autoCloseTimer = null;
+    }
+    _record(action, detail = '') {
+        const entry = { ts: Date.now(), action, detail, state: this.state };
+        this.log.unshift(entry);
+        if (this.log.length > 50) this.log.pop();
+        UIRenderer.renderGateLog();
+        UIRenderer.renderGateVisual();
+        AuditLogger.log('gate', action, detail);
+    }
+    openGate(detail = 'Acesso autorizado') {
+        this.state = 'OPEN';
+        this._record('OPEN_GATE', detail);
+        // Auto-fechar após alguns segundos (simula hardware real)
+        clearTimeout(this._autoCloseTimer);
+        this._autoCloseTimer = setTimeout(() => {
+            if (this.state === 'OPEN') {
+                this.state = 'LOCKED';
+                this._record('AUTO_LOCK', 'Fechamento automático');
+            }
+        }, CONFIG.GATE_AUTO_CLOSE_MS);
+        this._playSound('open');
+    }
+    denyGate(detail = 'Acesso negado') {
+        this.state = 'DENIED';
+        this._record('DENY_GATE', detail);
+        this._playSound('deny');
+        setTimeout(() => {
+            if (this.state === 'DENIED') {
+                this.state = 'LOCKED';
+                this._record('AUTO_LOCK', 'Retorno ao bloqueio');
+            }
+        }, 2000);
+    }
+    lockGate(detail = 'Bloqueio manual') {
+        this.state = 'LOCKED';
+        this._record('LOCK_GATE', detail);
+    }
+    getGateStatus() { return { state: this.state, lastEvent: this.log[0] || null, logCount: this.log.length }; }
+
+    _playSound(type) {
+        // Beep simples via Web Audio API (sem depender de arquivos externos)
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            if (type === 'open') {
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.start(); osc.stop(ctx.currentTime + 0.2);
+            } else if (type === 'deny') {
+                osc.frequency.value = 220;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.start(); osc.stop(ctx.currentTime + 0.4);
+            }
+        } catch (e) {}
+    }
+}
+
+/* ============================================================
+   7. AUDIT LOGGER
+   ============================================================ */
+const AuditLogger = {
+    log(operator, action, target, details = '') {
+        AppState.auditLog.unshift({
+            timestamp: Date.now(),
+            operator,
+            action,
+            target,
+            details
+        });
+        if (AppState.auditLog.length > 500) AppState.auditLog.length = 500;
+        StorageManager.set('auditLog', AppState.auditLog);
+    }
+};
+
+/* ============================================================
+   8. UI RENDERER (Manipulação de DOM)
+   ============================================================ */
+const UIRenderer = {
+    // ---------- NAV & VIEWS ----------
+    switchView(viewName) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById('view-' + viewName);
+        if (target) target.classList.add('active');
+
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const nav = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+        if (nav) nav.classList.add('active');
+
+        const titles = {
+            dashboard: '📊 Dashboard', terminal: '🚪 Terminal de Acesso', attendance: '📅 Frequência',
+            history: '🕐 Histórico', students: '👥 Alunos', classes: '📚 Turmas',
+            faceEnroll: '📸 Cadastro Facial', schedule: '⏰ Regras de Horário',
+            methods: '🔑 Métodos Alternativos', gate: '🚧 Simulador de Catraca',
+            privacy: '🛡️ Privacidade', admin: '⚙️ Painel Administrativo', audit: '📋 Auditoria'
+        };
+        document.getElementById('topbarTitle').textContent = titles[viewName] || viewName;
+        AppState.currentView = viewName;
+
+        // Refresh da view específica
+        if (viewName === 'dashboard') this.renderDashboard();
+        else if (viewName === 'students') this.renderStudents();
+        else if (viewName === 'classes') this.renderClasses();
+        else if (viewName === 'attendance') this.renderAttendance();
+        else if (viewName === 'history') this.renderHistory();
+        else if (viewName === 'schedule') this.renderSchedules();
+        else if (viewName === 'gate') this.renderGateVisual();
+        else if (viewName === 'audit') this.renderAudit();
+        else if (viewName === 'privacy') this.renderPrivacy();
+        else if (viewName === 'methods') this.renderMethods();
+        else if (viewName === 'faceEnroll') this.renderEnroll();
+
+        // Fechar sidebar no mobile
+        document.getElementById('sidebar').classList.remove('open');
+    },
+
+    // ---------- DASHBOARD ----------
+    renderDashboard() {
+        const today = new Date().toDateString();
+        const todayLogs = AppState.accessLog.filter(a => new Date(a.timestamp).toDateString() === today);
+        const presentIds = new Set();
+        let denied = 0;
+        todayLogs.forEach(l => {
+            if (l.result === 'VERIFIED' && l.type === 'entry') presentIds.add(l.studentId);
+            if (l.result !== 'VERIFIED') denied++;
+        });
+
+        document.getElementById('statTotal').textContent = AppState.students.length;
+        document.getElementById('statPresent').textContent = presentIds.size;
+        document.getElementById('statAbsent').textContent = Math.max(0, AppState.students.filter(s => s.status === 'active').length - presentIds.size);
+        document.getElementById('statDenied').textContent = denied;
+        document.getElementById('dateToday').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+        // Câmera / Processador / Catraca
+        document.getElementById('dashCamStatus').textContent = navigator.mediaDevices ? '✅ API disponível' : '❌ Indisponível';
+        document.getElementById('dashCamStatus').className = 'badge badge-' + (navigator.mediaDevices ? 'success' : 'danger');
+        document.getElementById('dashGateStatus').textContent = window.__gate ? window.__gate.getGateStatus().state : '—';
+        document.getElementById('dashFaceStatus').textContent = window.__face?.simulationMode ? '⚠️ Modo Simulação' : (window.__face?.modelsLoaded ? '✅ IA Ativa' : '⏳ Carregando');
+        document.getElementById('dashFaceStatus').className = 'badge badge-' + (window.__face?.simulationMode ? 'warning' : (window.__face?.modelsLoaded ? 'success' : 'neutral'));
+
+        this.renderAccessChart();
+        this.renderOccupancy();
+    },
+
+    renderAccessChart() {
+        const canvas = document.getElementById('chartAccess');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        const w = rect.width, h = rect.height;
+
+        // Últimos 7 dias
+        const days = [];
+        const countsIn = [];
+        const countsOut = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(); d.setDate(d.getDate() - i);
+            const key = d.toDateString();
+            days.push(d.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0,3));
+            const dayLogs = AppState.accessLog.filter(a => new Date(a.timestamp).toDateString() === key && a.result === 'VERIFIED');
+            countsIn.push(dayLogs.filter(l => l.type === 'entry').length);
+            countsOut.push(dayLogs.filter(l => l.type === 'exit').length);
+        }
+
+        const maxVal = Math.max(1, ...countsIn, ...countsOut);
+        ctx.clearRect(0, 0, w, h);
+
+        const pad = { top: 20, right: 20, bottom: 30, left: 35 };
+        const plotW = w - pad.left - pad.right;
+        const plotH = h - pad.top - pad.bottom;
+        const barW = plotW / days.length * 0.35;
+
+        // Grade Y
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted');
+        ctx.font = '10px sans-serif';
+        for (let i = 0; i <= 4; i++) {
+            const y = pad.top + (plotH / 4) * i;
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+            ctx.fillText(Math.round(maxVal * (1 - i/4)), 5, y + 3);
+        }
+
+        // Barras
+        days.forEach((d, i) => {
+            const x = pad.left + (plotW / days.length) * (i + 0.5);
+            const hIn = (countsIn[i] / maxVal) * plotH;
+            const hOut = (countsOut[i] / maxVal) * plotH;
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+            ctx.fillRect(x - barW - 1, pad.top + plotH - hIn, barW, hIn);
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--success');
+            ctx.fillRect(x + 1, pad.top + plotH - hOut, barW, hOut);
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted');
+            ctx.textAlign = 'center';
+            ctx.fillText(d, x, h - pad.bottom + 15);
+        });
+        ctx.textAlign = 'start';
+    },
+
+    renderOccupancy() {
+        const container = document.getElementById('classOccupancy');
+        if (!container) return;
+        container.innerHTML = '';
+        AppState.classes.forEach(c => {
+            const enrolled = AppState.students.filter(s => s.classId === c.id).length;
+            const pct = Math.min(100, (enrolled / (c.capacity || 40)) * 100);
+            const color = pct > 90 ? 'danger' : pct > 70 ? 'warning' : 'success';
+            container.innerHTML += `
+                <div>
+                    <div class="flex-between mb-1"><span class="text-sm">${c.name}</span><span class="text-xs text-muted">${enrolled}/${c.capacity || 40}</span></div>
+                    <div style="height: 8px; background: var(--surface-alt); border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${pct}%; height: 100%; background: var(--${color});"></div>
+                    </div>
+                </div>`;
+        });
+    },
+
+    // ---------- ALUNOS ----------
+    renderStudents() {
+        const tbody = document.querySelector('#studTable tbody');
+        const search = document.getElementById('studSearch').value.toLowerCase();
+        const classFilter = document.getElementById('studClassFilter').value;
+        tbody.innerHTML = '';
+
+        // Populate filter
+        const sel = document.getElementById('studClassFilter');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Todas turmas</option>' +
+            AppState.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        sel.value = current;
+
+        let students = AppState.students;
+        if (search) students = students.filter(s => (s.name + ' ' + s.enrollment).toLowerCase().includes(search));
+        if (classFilter) students = students.filter(s => s.classId === classFilter);
+
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">👥</div>Nenhum aluno cadastrado</div></td></tr>';
+            return;
+        }
+
+        students.forEach(s => {
+            const cls = AppState.classes.find(c => c.id === s.classId);
+            const hasFace = s.hasFace ? '<span class="badge badge-success">✅ Cadastrado</span>' : '<span class="badge badge-neutral">Não cadastrado</span>';
+            const statusBadge = s.status === 'active'
+                ? '<span class="badge badge-success">Ativo</span>'
+                : '<span class="badge badge-danger">Inativo</span>';
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-mono">${s.enrollment}</td>
+                    <td><strong>${s.name}</strong></td>
+                    <td>${cls ? cls.name : '—'}</td>
+                    <td>${s.birthDate || '—'}</td>
+                    <td>${s.guardian || '—'}<br><span class="text-xs text-muted">${s.phone || ''}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>${hasFace}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="App.editStudent('${s.id}')">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="App.deleteStudent('${s.id}')">🗑️</button>
+                    </td>
+                </tr>`;
+        });
+    },
+
+    // ---------- TURMAS ----------
+    renderClasses() {
+        const tbody = document.querySelector('#classTable tbody');
+        tbody.innerHTML = '';
+        if (AppState.classes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">📚</div>Nenhuma turma cadastrada</div></td></tr>';
+            return;
+        }
+        AppState.classes.forEach(c => {
+            const statusBadge = c.status === 'active' ? '<span class="badge badge-success">Ativa</span>' : '<span class="badge badge-danger">Inativa</span>';
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-mono">${c.id}</td>
+                    <td><strong>${c.name}</strong></td>
+                    <td>${c.grade || '—'}</td>
+                    <td>${c.shift || '—'}</td>
+                    <td>${c.teacher || '—'}</td>
+                    <td>${c.capacity || '—'}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="App.editClass('${c.id}')">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="App.deleteClass('${c.id}')">🗑️</button>
+                    </td>
+                </tr>`;
+        });
+    },
+
+    // ---------- FREQUÊNCIA ----------
+    renderAttendance() {
+        const date = document.getElementById('attDate').value;
+        const classFilter = document.getElementById('attClassFilter').value;
+        const tbody = document.querySelector('#attTable tbody');
+        tbody.innerHTML = '';
+
+        const sel = document.getElementById('attClassFilter');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Todas as turmas</option>' +
+            AppState.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        sel.value = current;
+
+        const targetDate = date ? new Date(date + 'T00:00:00').toDateString() : new Date().toDateString();
+        let students = AppState.students;
+        if (classFilter) students = students.filter(s => s.classId === classFilter);
+
+        students.forEach(s => {
+            const cls = AppState.classes.find(c => c.id === s.classId);
+            const dayLogs = AppState.accessLog
+                .filter(a => a.studentId === s.id && new Date(a.timestamp).toDateString() === targetDate && a.result === 'VERIFIED')
+                .sort((a, b) => a.timestamp - b.timestamp);
+            const firstEntry = dayLogs.find(l => l.type === 'entry');
+            const lastExit = [...dayLogs].reverse().find(l => l.type === 'exit');
+
+            let status;
+            if (firstEntry) {
+                const entryTime = new Date(firstEntry.timestamp);
+                const schedule = AccessController.checkSchedule(s.classId, 'entry');
+                if (schedule.allowed) status = '<span class="badge badge-success">Presente</span>';
+                else status = '<span class="badge badge-warning">Atraso</span>';
+            } else {
+                status = '<span class="badge badge-danger">Ausente</span>';
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-mono">${s.enrollment}</td>
+                    <td>${s.name}</td>
+                    <td>${cls ? cls.name : '—'}</td>
+                    <td>${firstEntry ? new Date(firstEntry.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '—'}</td>
+                    <td>${lastExit ? new Date(lastExit.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '—'}</td>
+                    <td>${status}</td>
+                </tr>`;
+        });
+    },
+
+    // ---------- HISTÓRICO ----------
+    renderHistory() {
+        const tbody = document.querySelector('#histTable tbody');
+        const search = document.getElementById('histSearch').value.toLowerCase();
+        const resultFilter = document.getElementById('histResultFilter').value;
+        tbody.innerHTML = '';
+
+        let logs = [...AppState.accessLog].sort((a, b) => b.timestamp - a.timestamp);
+        if (search) logs = logs.filter(l => {
+            const s = AppState.students.find(x => x.id === l.studentId);
+            return s && (s.name.toLowerCase().includes(search) || s.enrollment.toLowerCase().includes(search));
+        });
+        if (resultFilter) logs = logs.filter(l => l.result === resultFilter);
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Nenhum registro</div></td></tr>';
+            return;
+        }
+
+        logs.forEach(l => {
+            const s = AppState.students.find(x => x.id === l.studentId);
+            const cls = s ? AppState.classes.find(c => c.id === s.classId) : null;
+            const resultBadge = {
+                VERIFIED: '<span class="badge badge-success">Autorizado</span>',
+                NOT_VERIFIED: '<span class="badge badge-danger">Não Verificado</span>',
+                BLOCKED: '<span class="badge badge-danger">Bloqueado</span>',
+                OUT_OF_SCHEDULE: '<span class="badge badge-warning">Fora do Horário</span>'
+            }[l.result] || '<span class="badge badge-neutral">' + l.result + '</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-mono text-xs">${new Date(l.timestamp).toLocaleString('pt-BR')}</td>
+                    <td>${s ? s.name : '<em>Desconhecido</em>'}</td>
+                    <td>${cls ? cls.name : '—'}</td>
+                    <td>${l.type === 'entry' ? '🟢 Entrada' : '🔴 Saída'}</td>
+                    <td><span class="badge badge-info">${l.method}</span></td>
+                    <td>${resultBadge}</td>
+                    <td class="text-xs">${l.terminal || '—'}</td>
+                </tr>`;
+        });
+    },
+
+    // ---------- HORÁRIOS ----------
+    renderSchedules() {
+        const tbody = document.querySelector('#schTable tbody');
+        tbody.innerHTML = '';
+        if (AppState.schedules.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Nenhuma regra cadastrada</div></td></tr>';
+            return;
+        }
+        AppState.schedules.forEach((s, idx) => {
+            const cls = AppState.classes.find(c => c.id === s.classId);
+            tbody.innerHTML += `
+                <tr>
+                    <td>${cls ? cls.name : '—'}</td>
+                    <td>${s.day}</td>
+                    <td>${s.type === 'entry' ? 'Entrada' : 'Saída'}</td>
+                    <td>${String(s.startHour).padStart(2,'0')}:${String(s.startMin).padStart(2,'0')}</td>
+                    <td>${String(s.endHour).padStart(2,'0')}:${String(s.endMin).padStart(2,'0')}</td>
+                    <td>${s.tolerance || 0} min</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="App.deleteSchedule(${idx})">🗑️</button></td>
+                </tr>`;
+        });
+    },
+
+    // ---------- CATRACA ----------
+    renderGateVisual() {
+        if (!window.__gate) return;
+        const status = window.__gate.getGateStatus();
+        const icon = document.getElementById('gateVisualIcon');
+        const text = document.getElementById('gateStateText');
+        icon.className = 'gate-icon';
+        if (status.state === 'OPEN') { icon.textContent = '🟢'; icon.classList.add('gate-open'); text.textContent = 'Liberada'; }
+        else if (status.state === 'DENIED') { icon.textContent = '🔴'; icon.classList.add('gate-closed'); text.textContent = 'Negada'; }
+        else { icon.textContent = '🚧'; text.textContent = 'Bloqueada'; }
+
+        document.getElementById('gateLastEvent').textContent = status.lastEvent
+            ? `${new Date(status.lastEvent.ts).toLocaleTimeString('pt-BR')} - ${status.lastEvent.action}: ${status.lastEvent.detail}`
+            : 'Nenhum evento';
+    },
+    renderGateLog() {
+        if (!window.__gate) return;
+        const log = document.getElementById('gateLog');
+        if (!log) return;
+        log.innerHTML = window.__gate.log.slice(0, 20).map(e =>
+            `<div>[${new Date(e.ts).toLocaleTimeString('pt-BR')}] <strong>${e.action}</strong> - ${e.detail} (estado: ${e.state})</div>`
+        ).join('') || '<em>Sem eventos</em>';
+    },
+
+    // ---------- PRIVACIDADE ----------
+    renderPrivacy() {
+        const populate = (id) => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = '<option value="">Selecione aluno...</option>' +
+                AppState.students.filter(s => s.hasFace).map(s => `<option value="${s.id}">${s.name} (${s.enrollment})</option>`).join('');
+            sel.value = current;
+        };
+        populate('privStudentSelect');
+        const sel2 = document.getElementById('privStudentSelectFull');
+        if (sel2) {
+            const current = sel2.value;
+            sel2.innerHTML = '<option value="">Selecione aluno para excluir...</option>' +
+                AppState.students.map(s => `<option value="${s.id}">${s.name} (${s.enrollment})</option>`).join('');
+            sel2.value = current;
+        }
+    },
+
+    // ---------- MÉTODOS ALT ----------
+    renderMethods() {
+        const sel = document.getElementById('qrStudentSelect');
+        if (sel) {
+            const current = sel.value;
+            sel.innerHTML = '<option value="">Selecione...</option>' +
+                AppState.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            sel.value = current;
+        }
+    },
+
+    // ---------- AUDITORIA ----------
+    renderAudit() {
+        const tbody = document.querySelector('#auditTable tbody');
+        tbody.innerHTML = '';
+        if (AppState.auditLog.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Nenhum evento registrado</div></td></tr>';
+            return;
+        }
+        AppState.auditLog.slice(0, 100).forEach(a => {
+            tbody.innerHTML += `
+                <tr>
+                    <td class="font-mono text-xs">${new Date(a.timestamp).toLocaleString('pt-BR')}</td>
+                    <td>${a.operator}</td>
+                    <td><span class="badge badge-info">${a.action}</span></td>
+                    <td>${a.target}</td>
+                    <td class="text-xs text-muted">${a.details || '—'}</td>
+                </tr>`;
+        });
+    },
+
+    // ---------- ENROLL (Cadastro Facial) ----------
+    renderEnroll() {
+        const sel = document.getElementById('enrollStudentSelect');
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Selecione um aluno...</option>' +
+            AppState.students.map(s => `<option value="${s.id}" ${s.hasFace ? 'disabled' : ''}>${s.name} (${s.enrollment})${s.hasFace ? ' - JÁ CADASTRADO' : ''}</option>`).join('');
+        sel.value = current;
+    },
+
+    // ---------- TOAST ----------
+    toast(title, type = 'info', msg = '', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const icons = { success: '✅', danger: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-' + type;
+        toast.innerHTML = `
+            <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+            </div>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'toastIn 0.3s ease-in reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    },
+
+    // ---------- MODAL ----------
+    openModal(title, bodyHtml, footerBtns = []) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = bodyHtml;
+        const footer = document.getElementById('modalFooter');
+        footer.innerHTML = '';
+        footerBtns.forEach(b => {
+            const btn = document.createElement('button');
+            btn.className = 'btn ' + (b.class || 'btn-secondary');
+            btn.textContent = b.label;
+            btn.onclick = () => { b.onClick && b.onClick(); if (b.close !== false) this.closeModal(); };
+            footer.appendChild(btn);
+        });
+        document.getElementById('modal').classList.add('show');
+    },
+    closeModal() { document.getElementById('modal').classList.remove('show'); },
+
+    confirm(message, onConfirm, title = 'Confirmação') {
+        this.openModal(title, `<p>${message}</p>`, [
+            { label: 'Cancelar', class: 'btn-secondary' },
+            { label: 'Confirmar', class: 'btn-primary', onClick: onConfirm }
+        ]);
+    },
+
+    updateCameraIndicator(on) {
+        const ind = document.getElementById('camIndicator');
+        if (ind) ind.textContent = on ? 'ON' : 'OFF';
+        const liveInd = document.getElementById('terminalLiveIndicator');
+        if (liveInd) liveInd.style.display = on ? 'flex' : 'none';
+    }
+};
+
+/* ============================================================
+   9. APP (Roteamento e Inicialização)
+   ============================================================ */
+const App = {
+    terminalCamera: null,
+    enrollCamera: null,
+    enrollDescriptors: [],
+
+    async init() {
+        // 1. Carregar dados do storage
+        AppState.students = StorageManager.get('students', []);
+        AppState.classes = StorageManager.get('classes', []);
+        AppState.accessLog = StorageManager.get('accessLog', []);
+        AppState.schedules = StorageManager.get('schedules', []);
+        AppState.auditLog = StorageManager.get('auditLog', []);
+
+        // Seed de demonstração (apenas se vazio)
+        if (AppState.classes.length === 0) {
+            AppState.classes = [
+                { id: 'C001', name: '1º Ano A', grade: '1º Ano EF', shift: 'Matutino', teacher: 'Prof. Maria', capacity: 30, status: 'active' },
+                { id: 'C002', name: '5º Ano B', grade: '5º Ano EF', shift: 'Vespertino', teacher: 'Prof. João', capacity: 35, status: 'active' },
+            ];
+            AppState.students = [
+                { id: 'S001', enrollment: '2024001', name: 'Ana Silva', classId: 'C001', birthDate: '2016-05-12', guardian: 'Pedro Silva', phone: '(11) 98765-4321', status: 'active', hasFace: false, createdAt: Date.now() },
+                { id: 'S002', enrollment: '2024002', name: 'Bruno Costa', classId: 'C001', birthDate: '2016-08-20', guardian: 'Julia Costa', phone: '(11) 97654-3210', status: 'active', hasFace: false, createdAt: Date.now() },
+                { id: 'S003', enrollment: '2024003', name: 'Carla Mendes', classId: 'C002', birthDate: '2013-02-15', guardian: 'Roberto Mendes', phone: '(11) 96543-2109', status: 'active', hasFace: false, createdAt: Date.now() },
+            ];
+            StorageManager.set('classes', AppState.classes);
+            StorageManager.set('students', AppState.students);
+        }
+
+        // 2. Inicializar GateController e FaceProcessor
+        window.__gate = new GateController();
+        window.__face = new FaceProcessor();
+        const loaded = await window.__face.loadModels();
+        AppState.faceApiReady = loaded || window.__face.simulationMode;
+        this._updateSidebarStatus();
+
+        // 3. Inicializar câmeras
+        this.terminalCamera = new CameraManager(document.getElementById('terminalVideo'));
+        this.enrollCamera = new CameraManager(document.getElementById('enrollVideo'));
+
+        // 4. Bind eventos
+        this._bindEvents();
+
+        // 5. Renderizar view inicial
+        UIRenderer.switchView('dashboard');
+        UIRenderer.toast('Sistema pronto', 'success', window.__face.simulationMode ? '⚠️ Modo simulação ativo (face-api não carregou)' : '✅ IA facial carregada');
+        AuditLogger.log('system', 'APP_START', 'app', 'Sistema inicializado');
+    },
+
+    _updateSidebarStatus() {
+        const status = document.getElementById('sidebarStatus');
+        if (!status) return;
+        const mode = window.__face?.simulationMode ? '🧪 Simulação' : '🤖 IA Ativa';
+        status.innerHTML = `Modo: ${mode}<br><span class="text-xs">Face API: ${window.__faceApiLoaded ? '✅' : '⚠️ offline'}</span>`;
+    },
+
+    _bindEvents() {
+        // Navegação
+        document.querySelectorAll('.nav-item').forEach(n => {
+            n.addEventListener('click', () => UIRenderer.switchView(n.dataset.view));
+        });
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+        document.getElementById('btnThemeToggle').addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            document.getElementById('btnThemeToggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', next);
+            // Re-renderizar gráfico que depende de cores
+            if (AppState.currentView === 'dashboard') UIRenderer.renderDashboard();
+        });
+        document.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => UIRenderer.closeModal()));
+        document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') UIRenderer.closeModal(); });
+
+        // Tema salvo
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('btnThemeToggle').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        // ALUNOS
+        document.getElementById('btnNewStudent').addEventListener('click', () => this._studentForm());
+        document.getElementById('studSearch').addEventListener('input', () => UIRenderer.renderStudents());
+        document.getElementById('studClassFilter').addEventListener('change', () => UIRenderer.renderStudents());
+
+        // TURMAS
+        document.getElementById('btnNewClass').addEventListener('click', () => this._classForm());
+
+        // TERMINAL
+        document.getElementById('btnTerminalStart').addEventListener('click', () => this._terminalStart());
+        document.getElementById('btnTerminalStop').addEventListener('click', () => this._terminalStop());
+        document.getElementById('btnTerminalAlt').addEventListener('click', () => this._terminalAlternative());
+        document.getElementById('btnTerminalManual').addEventListener('click', () => this._terminalManual());
+
+        // ENROLL
+        document.getElementById('enrollStudentSelect').addEventListener('change', (e) => {
+            const id = e.target.value;
+            const info = document.getElementById('enrollStudentInfo');
+            const btnStart = document.getElementById('btnEnrollStart');
+            if (!id) { info.textContent = ''; btnStart.disabled = true; return; }
+            const s = AppState.students.find(x => x.id === id);
+            const cls = AppState.classes.find(c => c.id === s.classId);
+            info.innerHTML = `<strong>${s.name}</strong> - Turma: ${cls ? cls.name : '—'} ${s.hasFace ? '<span class="sim-badge">JÁ CADASTRADO</span>' : ''}`;
+            btnStart.disabled = s.hasFace;
+        });
+        document.getElementById('enrollConsent').addEventListener('change', () => this._updateEnrollButtons());
+        document.getElementById('btnEnrollStart').addEventListener('click', () => this._enrollStart());
+        document.getElementById('btnEnrollCapture').addEventListener('click', () => this._enrollCapture());
+        document.getElementById('btnEnrollStop').addEventListener('click', () => this._enrollStop());
+        document.getElementById('btnEnrollSave').addEventListener('click', () => this._enrollSave());
+
+        // FREQUÊNCIA
+        document.getElementById('attDate').valueAsDate = new Date();
+        document.getElementById('attDate').addEventListener('change', () => UIRenderer.renderAttendance());
+        document.getElementById('attClassFilter').addEventListener('change', () => UIRenderer.renderAttendance());
+
+        // HISTÓRICO
+        document.getElementById('histSearch').addEventListener('input', () => UIRenderer.renderHistory());
+        document.getElementById('histResultFilter').addEventListener('change', () => UIRenderer.renderHistory());
+        document.getElementById('btnExportHistory').addEventListener('click', () => this._export('access'));
+
+        // HORÁRIOS
+        document.getElementById('btnNewSchedule').addEventListener('click', () => this._scheduleForm());
+
+        // MÉTODOS ALT
+        document.getElementById('btnPinAccess').addEventListener('click', () => this._pinAccess());
+        document.getElementById('btnGenQR').addEventListener('click', () => this._generateQR());
+        document.getElementById('btnBindRfid').addEventListener('click', () => this._bindRfid());
+        document.getElementById('btnRfidAccess').addEventListener('click', () => this._rfidAccess());
+
+        // CATRACA
+        document.getElementById('btnGateOpen').addEventListener('click', () => window.__gate.openGate('Liberação manual'));
+        document.getElementById('btnGateDeny').addEventListener('click', () => window.__gate.denyGate('Negação manual'));
+        document.getElementById('btnGateLock').addEventListener('click', () => window.__gate.lockGate('Bloqueio manual'));
+        document.getElementById('btnGateStatus').addEventListener('click', () => {
+            const s = window.__gate.getGateStatus();
+            UIRenderer.toast('Status: ' + s.state, 'info', `Último evento: ${s.lastEvent ? s.lastEvent.action : '—'}`);
+        });
+
+        // PRIVACIDADE
+        document.getElementById('btnRemoveFace').addEventListener('click', () => this._removeFace());
+        document.getElementById('btnForgetStudent').addEventListener('click', () => this._forgetStudent());
+
+        // ADMIN
+        document.getElementById('btnAdminLogin').addEventListener('click', () => this._adminLogin());
+        document.querySelectorAll('[data-export]').forEach(b => b.addEventListener('click', () => this._export(b.dataset.export)));
+        document.getElementById('btnAdminImport').addEventListener('click', () => this._import());
+        document.querySelectorAll('[data-clean]').forEach(b => b.addEventListener('click', () => this._clean(b.dataset.clean)));
+        document.getElementById('btnClearAudit').addEventListener('click', () => {
+            UIRenderer.confirm('Limpar todos os registros de auditoria?', () => {
+                AppState.auditLog = [];
+                StorageManager.set('auditLog', []);
+                UIRenderer.renderAudit();
+                UIRenderer.toast('Auditoria limpa', 'success');
+            });
+        });
+
+        // Redesenhar gráfico ao redimensionar
+        window.addEventListener('resize', () => {
+            if (AppState.currentView === 'dashboard') setTimeout(() => UIRenderer.renderAccessChart(), 100);
+        });
+    },
+
+    // ---------- CRUD ALUNOS ----------
+    _studentForm(student = null) {
+        const isEdit = !!student;
+        const body = `
+            <div class="form-group"><label class="form-label">Matrícula *</label><input type="text" class="form-input" id="fEnroll" value="${student?.enrollment || ''}"></div>
+            <div class="form-group"><label class="form-label">Nome *</label><input type="text" class="form-input" id="fName" value="${student?.name || ''}"></div>
+            <div class="form-group"><label class="form-label">Turma *</label>
+                <select class="form-select" id="fClass">
+                    <option value="">Selecione...</option>
+                    ${AppState.classes.map(c => `<option value="${c.id}" ${student?.classId === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Nascimento</label><input type="date" class="form-input" id="fBirth" value="${student?.birthDate || ''}"></div>
+            <div class="form-group"><label class="form-label">Responsável</label><input type="text" class="form-input" id="fGuardian" value="${student?.guardian || ''}"></div>
+            <div class="form-group"><label class="form-label">Telefone</label><input type="text" class="form-input" id="fPhone" value="${student?.phone || ''}"></div>
+            <div class="form-group"><label class="form-label">Status</label>
+                <select class="form-select" id="fStatus">
+                    <option value="active" ${student?.status === 'active' ? 'selected' : ''}>Ativo</option>
+                    <option value="inactive" ${student?.status === 'inactive' ? 'selected' : ''}>Inativo</option>
+                </select>
+            </div>
+        `;
+        UIRenderer.openModal(isEdit ? 'Editar Aluno' : 'Novo Aluno', body, [
+            { label: 'Cancelar' },
+            { label: 'Salvar', class: 'btn-primary', onClick: () => this._saveStudent(student?.id) }
+        ]);
+    },
+    _saveStudent(id) {
+        const data = {
+            enrollment: document.getElementById('fEnroll').value.trim(),
+            name: document.getElementById('fName').value.trim(),
+            classId: document.getElementById('fClass').value,
+            birthDate: document.getElementById('fBirth').value,
+            guardian: document.getElementById('fGuardian').value.trim(),
+            phone: document.getElementById('fPhone').value.trim(),
+            status: document.getElementById('fStatus').value,
+        };
+        if (!data.enrollment || !data.name || !data.classId) {
+            UIRenderer.toast('Preencha os campos obrigatórios', 'danger'); return;
+        }
+        if (id) {
+            const idx = AppState.students.findIndex(s => s.id === id);
+            AppState.students[idx] = { ...AppState.students[idx], ...data };
+            AuditLogger.log(AppState.currentOperator, 'STUDENT_UPDATE', id, data.name);
+        } else {
+            const newId = 'S' + Date.now();
+            AppState.students.push({ id: newId, ...data, hasFace: false, createdAt: Date.now() });
+            AuditLogger.log(AppState.currentOperator, 'STUDENT_CREATE', newId, data.name);
+        }
+        StorageManager.set('students', AppState.students);
+        UIRenderer.renderStudents();
+        UIRenderer.toast('Aluno salvo', 'success');
+    },
+    editStudent(id) {
+        const s = AppState.students.find(x => x.id === id);
+        if (s) this._studentForm(s);
+    },
+    deleteStudent(id) {
+        const s = AppState.students.find(x => x.id === id);
+        if (!s) return;
+        UIRenderer.confirm(`Excluir ${s.name}? Isso removerá também o histórico.`, async () => {
+            await StorageManager.removeFace(id);
+            AppState.students = AppState.students.filter(x => x.id !== id);
+            AppState.accessLog = AppState.accessLog.filter(a => a.studentId !== id);
+            StorageManager.set('students', AppState.students);
+            StorageManager.set('accessLog', AppState.accessLog);
+            AuditLogger.log(AppState.currentOperator, 'STUDENT_DELETE', id, s.name);
+            UIRenderer.renderStudents();
+            UIRenderer.toast('Aluno excluído', 'success');
+        });
+    },
+
+    // ---------- CRUD TURMAS ----------
+    _classForm(cls = null) {
+        const body = `
+            <div class="form-group"><label class="form-label">ID</label><input type="text" class="form-input" id="fcId" value="${cls?.id || 'C' + Date.now().toString().slice(-6)}" ${cls ? 'readonly' : ''}></div>
+            <div class="form-group"><label class="form-label">Nome *</label><input type="text" class="form-input" id="fcName" value="${cls?.name || ''}"></div>
+            <div class="form-group"><label class="form-label">Série</label><input type="text" class="form-input" id="fcGrade" value="${cls?.grade || ''}"></div>
+            <div class="form-group"><label class="form-label">Turno</label>
+                <select class="form-select" id="fcShift">
+                    <option value="Matutino" ${cls?.shift === 'Matutino' ? 'selected' : ''}>Matutino</option>
+                    <option value="Vespertino" ${cls?.shift === 'Vespertino' ? 'selected' : ''}>Vespertino</option>
+                    <option value="Noturno" ${cls?.shift === 'Noturno' ? 'selected' : ''}>Noturno</option>
+                    <option value="Integral" ${cls?.shift === 'Integral' ? 'selected' : ''}>Integral</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Professor</label><input type="text" class="form-input" id="fcTeacher" value="${cls?.teacher || ''}"></div>
+            <div class="form-group"><label class="form-label">Capacidade</label><input type="number" class="form-input" id="fcCap" value="${cls?.capacity || 30}"></div>
+            <div class="form-group"><label class="form-label">Status</label>
+                <select class="form-select" id="fcStatus">
+                    <option value="active" ${cls?.status === 'active' ? 'selected' : ''}>Ativa</option>
+                    <option value="inactive" ${cls?.status === 'inactive' ? 'selected' : ''}>Inativa</option>
+                </select>
+            </div>
+        `;
+        UIRenderer.openModal(cls ? 'Editar Turma' : 'Nova Turma', body, [
+            { label: 'Cancelar' },
+            { label: 'Salvar', class: 'btn-primary', onClick: () => this._saveClass(cls?.id) }
+        ]);
+    },
+    _saveClass(id) {
+        const data = {
+            id: document.getElementById('fcId').value.trim(),
+            name: document.getElementById('fcName').value.trim(),
+            grade: document.getElementById('fcGrade').value.trim(),
+            shift: document.getElementById('fcShift').value,
+            teacher: document.getElementById('fcTeacher').value.trim(),
+            capacity: parseInt(document.getElementById('fcCap').value) || 30,
+            status: document.getElementById('fcStatus').value,
+        };
+        if (!data.id || !data.name) { UIRenderer.toast('Preencha ID e Nome', 'danger'); return; }
+        if (id) {
+            const idx = AppState.classes.findIndex(c => c.id === id);
+            AppState.classes[idx] = { ...AppState.classes[idx], ...data };
+            AuditLogger.log(AppState.currentOperator, 'CLASS_UPDATE', id, data.name);
+        } else {
+            if (AppState.classes.find(c => c.id === data.id)) { UIRenderer.toast('ID já existe', 'danger'); return; }
+            AppState.classes.push(data);
+            AuditLogger.log(AppState.currentOperator, 'CLASS_CREATE', data.id, data.name);
+        }
+        StorageManager.set('classes', AppState.classes);
+        UIRenderer.renderClasses();
+        UIRenderer.toast('Turma salva', 'success');
+    },
+    editClass(id) { const c = AppState.classes.find(x => x.id === id); if (c) this._classForm(c); },
+    deleteClass(id) {
+        const c = AppState.classes.find(x => x.id === id);
+        if (!c) return;
+        const hasStudents = AppState.students.some(s => s.classId === id);
+        if (hasStudents) { UIRenderer.toast('Turma possui alunos. Remova-os primeiro.', 'danger'); return; }
+        UIRenderer.confirm(`Excluir turma ${c.name}?`, () => {
+            AppState.classes = AppState.classes.filter(x => x.id !== id);
+            StorageManager.set('classes', AppState.classes);
+            AuditLogger.log(AppState.currentOperator, 'CLASS_DELETE', id, c.name);
+            UIRenderer.renderClasses();
+            UIRenderer.toast('Turma excluída', 'success');
+        });
+    },
+
+    // ---------- HORÁRIOS ----------
+    _scheduleForm() {
+        const body = `
+            <div class="form-group"><label class="form-label">Turma *</label>
+                <select class="form-select" id="fsClass">${AppState.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select>
+            </div>
+            <div class="form-group"><label class="form-label">Dia *</label>
+                <select class="form-select" id="fsDay">
+                    <option>Segunda</option><option>Terça</option><option>Quarta</option>
+                    <option>Quinta</option><option>Sexta</option><option>Sábado</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Tipo *</label>
+                <select class="form-select" id="fsType">
+                    <option value="entry">Entrada</option><option value="exit">Saída</option>
+                </select>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Início</label><input type="time" class="form-input" id="fsStart" value="07:00"></div>
+                <div class="form-group"><label class="form-label">Fim</label><input type="time" class="form-input" id="fsEnd" value="08:00"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Tolerância (minutos)</label><input type="number" class="form-input" id="fsTol" value="15" min="0"></div>
+        `;
+        UIRenderer.openModal('Nova Regra de Horário', body, [
+            { label: 'Cancelar' },
+            { label: 'Salvar', class: 'btn-primary', onClick: () => this._saveSchedule() }
+        ]);
+    },
+    _saveSchedule() {
+        const [sh, sm] = document.getElementById('fsStart').value.split(':').map(Number);
+        const [eh, em] = document.getElementById('fsEnd').value.split(':').map(Number);
+        AppState.schedules.push({
+            classId: document.getElementById('fsClass').value,
+            day: document.getElementById('fsDay').value,
+            type: document.getElementById('fsType').value,
+            startHour: sh, startMin: sm, endHour: eh, endMin: em,
+            tolerance: parseInt(document.getElementById('fsTol').value) || 0
+        });
+        StorageManager.set('schedules', AppState.schedules);
+        AuditLogger.log(AppState.currentOperator, 'SCHEDULE_CREATE', document.getElementById('fsClass').value, document.getElementById('fsDay').value);
+        UIRenderer.renderSchedules();
+        UIRenderer.toast('Regra criada', 'success');
+    },
+    deleteSchedule(idx) {
+        UIRenderer.confirm('Excluir regra?', () => {
+            AppState.schedules.splice(idx, 1);
+            StorageManager.set('schedules', AppState.schedules);
+            AuditLogger.log(AppState.currentOperator, 'SCHEDULE_DELETE', idx, '');
+            UIRenderer.renderSchedules();
+        });
+    },
+
+    // ---------- TERMINAL ----------
+    _terminalInterval: null,
+    async _terminalStart() {
+        const ok = await this.terminalCamera.start();
+        if (!ok) return;
+        document.getElementById('btnTerminalStart').disabled = true;
+        document.getElementById('btnTerminalStop').disabled = false;
+        AppState.terminalRunning = true;
+        this._setTerminalStatus('👁️ Buscando rostos...', 'neutral');
+        this._runTerminalLoop();
+    },
+    _terminalStop() {
+        this.terminalCamera.stop();
+        AppState.terminalRunning = false;
+        clearInterval(this._terminalInterval);
+        document.getElementById('btnTerminalStart').disabled = false;
+        document.getElementById('btnTerminalStop').disabled = true;
+        document.getElementById('terminalResult').classList.add('hidden');
+        this._setTerminalStatus('⏸️ Câmera parada', 'neutral');
+    },
+    async _runTerminalLoop() {
+        let lastDetectionTime = 0;
+        this._terminalInterval = setInterval(async () => {
+            if (!AppState.terminalRunning || !this.terminalCamera.isReady()) return;
+            const now = Date.now();
+            if (now - lastDetectionTime < CONFIG.VERIFICATION_INTERVAL_MS) return;
+            lastDetectionTime = now;
+
+            const dets = await window.__face.detect(document.getElementById('terminalVideo'));
+            const canvas = document.getElementById('terminalCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = document.getElementById('terminalVideo').videoWidth;
+            canvas.height = document.getElementById('terminalVideo').videoHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (dets.length === 0) {
+                this._setTerminalStatus('👁️ Nenhum rosto detectado', 'neutral');
+                return;
+            }
+            if (dets.length > 1) {
+                this._setTerminalStatus('⚠️ Múltiplos rostos - aproxime um por vez', 'warning');
+                return;
+            }
+
+            this._setTerminalStatus('🎯 Rosto detectado - identificando...', 'info');
+
+            // Desenhar bbox
+            if (!window.__face.simulationMode && dets[0].detection) {
+                const box = dets[0].detection.box;
+                ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+                ctx.strokeRect(box.x, box.y, box.width, box.height);
+            }
+
+            const descriptor = window.__face.extractDescriptor(dets[0]);
+            const result = await window.__face.identify(descriptor);
+
+            if (result.match) {
+                const student = AppState.students.find(s => s.id === result.studentId);
+                if (!student) return;
+                const type = AccessController.determineAccessType(student.id);
+                const check = AccessController.checkAccess(student, type);
+
+                const logEntry = {
+                    timestamp: Date.now(),
+                    studentId: student.id,
+                    type,
+                    method: 'FACE',
+                    result: check.result,
+                    terminal: 'TERMINAL_01',
+                    confidence: result.confidence
+                };
+                AppState.accessLog.push(logEntry);
+                StorageManager.set('accessLog', AppState.accessLog);
+                AuditLogger.log('terminal', 'ACCESS_' + check.result, student.id, student.name);
+
+                if (check.result === 'VERIFIED') {
+                    window.__gate.openGate(`Acesso facial - ${student.name}`);
+                    this._showTerminalResult(true, student, `✅ ${type === 'entry' ? 'ENTRADA' : 'SAÍDA'} REGISTRADA`);
+                } else if (check.result === 'OUT_OF_SCHEDULE' && check.soft) {
+                    // Fora do horário mas permitido com aviso (soft block)
+                    window.__gate.openGate(`Acesso com alerta - ${student.name}`);
+                    this._showTerminalResult(true, student, `⚠️ ${type === 'entry' ? 'ENTRADA' : 'SAÍDA'} (fora do horário)`);
+                } else {
+                    window.__gate.denyGate(check.reason);
+                    this._showTerminalResult(false, student, `❌ ${check.reason}`);
+                }
+
+                // Pausar para mostrar resultado
+                AppState.terminalRunning = false;
+                setTimeout(() => {
+                    AppState.terminalRunning = true;
+                    document.getElementById('terminalResult').classList.add('hidden');
+                    this._setTerminalStatus('👁️ Buscando rostos...', 'neutral');
+                }, 3500);
+            } else {
+                this._setTerminalStatus('❓ Rosto não identificado. Use método alternativo.', 'warning');
+                window.__gate.denyGate('Rosto não cadastrado');
+            }
+        }, CONFIG.VERIFICATION_INTERVAL_MS);
+    },
+    _setTerminalStatus(text, type) {
+        const el = document.getElementById('terminalStatus');
+        el.textContent = text;
+        const colors = { neutral: 'var(--surface-alt)', info: 'var(--info-light)', warning: 'var(--warning-light)', danger: 'var(--danger-light)' };
+        const textColors = { neutral: 'var(--text)', info: 'var(--info)', warning: 'var(--warning)', danger: 'var(--danger)' };
+        el.style.background = colors[type] || colors.neutral;
+        el.style.color = textColors[type] || textColors.neutral;
+    },
+    _showTerminalResult(success, student, message) {
+        const el = document.getElementById('terminalResult');
+        el.classList.remove('hidden', 'success', 'error');
+        el.classList.add(success ? 'success' : 'error');
+        el.innerHTML = `
+            <div style="font-size: 40px;">${success ? '✅' : '❌'}</div>
+            <div class="terminal-result-name">${student.name}</div>
+            <div class="terminal-result-msg">${student.enrollment} • ${AppState.classes.find(c => c.id === student.classId)?.name || ''}</div>
+            <div class="terminal-result-msg mt-2"><strong>${message}</strong></div>
+            ${window.__face.simulationMode ? '<div style="margin-top:8px;"><span class="sim-badge">MODO SIMULAÇÃO</span></div>' : ''}
+        `;
+    },
+    _terminalAlternative() {
+        const body = `
+            <p class="mb-3">Métodos alternativos não biométricos:</p>
+            <div class="grid grid-2">
+                <button class="btn btn-secondary" onclick="UIRenderer.closeModal(); UIRenderer.switchView('methods')">🔑 PIN / QR / RFID</button>
+                <button class="btn btn-secondary" onclick="App._terminalManual()">✋ Liberação Manual</button>
+            </div>
+        `;
+        UIRenderer.openModal('Acesso Alternativo', body, [{ label: 'Fechar' }]);
+    },
+    _terminalManual() {
+        const body = `
+            <p class="mb-3">Liberação manual por funcionário autorizado:</p>
+            <div class="form-group"><label class="form-label">Aluno *</label>
+                <select class="form-select" id="mStudent">${AppState.students.map(s => `<option value="${s.id}">${s.name} (${s.enrollment})</option>`).join('')}</select>
+            </div>
+            <div class="form-group"><label class="form-label">Tipo</label>
+                <select class="form-select" id="mType"><option value="entry">Entrada</option><option value="exit">Saída</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Motivo</label><input type="text" class="form-input" id="mReason" placeholder="Ex: Esqueceu cartão"></div>
+        `;
+        UIRenderer.openModal('Liberação Manual', body, [
+            { label: 'Cancelar' },
+            { label: 'Registrar', class: 'btn-primary', onClick: () => {
+                const studentId = document.getElementById('mStudent').value;
+                const type = document.getElementById('mType').value;
+                const reason = document.getElementById('mReason').value;
+                const student = AppState.students.find(s => s.id === studentId);
+                if (!student) return;
+                AppState.accessLog.push({
+                    timestamp: Date.now(), studentId, type, method: 'MANUAL',
+                    result: 'VERIFIED', terminal: 'MANUAL_RELEASE', reason
+                });
+                StorageManager.set('accessLog', AppState.accessLog);
+                window.__gate.openGate(`Liberação manual - ${student.name} (${reason || '—'})`);
+                AuditLogger.log(AppState.currentOperator, 'MANUAL_RELEASE', studentId, student.name + ' | ' + reason);
+                UIRenderer.toast('Acesso registrado', 'success');
+                UIRenderer.closeModal();
+            }}
+        ]);
+    },
+
+    // ---------- ENROLL (Cadastro Facial) ----------
+    _updateEnrollButtons() {
+        const consent = document.getElementById('enrollConsent').checked;
+        const studentId = document.getElementById('enrollStudentSelect').value;
+        document.getElementById('btnEnrollStart').disabled = !consent || !studentId || AppState.students.find(s => s.id === studentId)?.hasFace;
+    },
+    async _enrollStart() {
+        const studentId = document.getElementById('enrollStudentSelect').value;
+        if (!studentId) return;
+        const ok = await this.enrollCamera.start();
+        if (!ok) return;
+        this.enrollDescriptors = [];
+        document.getElementById('enrollCount').textContent = '0';
+        document.getElementById('btnEnrollStart').disabled = true;
+        document.getElementById('btnEnrollCapture').disabled = false;
+        document.getElementById('btnEnrollStop').disabled = false;
+        document.getElementById('btnEnrollSave').disabled = true;
+        document.getElementById('enrollStatus').innerHTML = '<span class="badge badge-info">Câmera ativa. Capture 5 amostras em diferentes ângulos.</span>';
+    },
+    async _enrollCapture() {
+        if (!this.enrollCamera.isReady()) { UIRenderer.toast('Câmera não pronta', 'warning'); return; }
+        const video = document.getElementById('enrollVideo');
+        const canvas = document.getElementById('enrollCanvas');
+        this.enrollCamera.takeSnapshot(canvas);
+
+        // Detectar rosto e extrair descriptor
+        const dets = await window.__face.detect(video);
+        if (dets.length === 0) {
+            UIRenderer.toast('Nenhum rosto detectado. Centralize o rosto.', 'warning');
+            return;
+        }
+        if (dets.length > 1) {
+            UIRenderer.toast('Múltiplos rostos. Enquadre apenas um.', 'warning');
+            return;
+        }
+        const descriptor = window.__face.extractDescriptor(dets[0]);
+        this.enrollDescriptors.push(descriptor);
+        document.getElementById('enrollCount').textContent = this.enrollDescriptors.length;
+        UIRenderer.toast(`Amostra ${this.enrollDescriptors.length} capturada`, 'success');
+
+        // Desenhar bbox no canvas
+        if (!window.__face.simulationMode && dets[0].detection) {
+            const ctx = canvas.getContext('2d');
+            const box = dets[0].detection.box;
+            ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+        }
+
+        if (this.enrollDescriptors.length >= CONFIG.SAMPLES_TO_ENROLL) {
+            document.getElementById('btnEnrollCapture').disabled = true;
+            document.getElementById('btnEnrollSave').disabled = false;
+            document.getElementById('enrollStatus').innerHTML = '<span class="badge badge-success">Amostras suficientes. Salve para concluir.</span>';
+        }
+    },
+    _enrollStop() {
+        this.enrollCamera.stop();
+        this.enrollDescriptors = [];
+        document.getElementById('btnEnrollStart').disabled = false;
+        document.getElementById('btnEnrollCapture').disabled = true;
+        document.getElementById('btnEnrollStop').disabled = true;
+        document.getElementById('btnEnrollSave').disabled = true;
+        document.getElementById('enrollStatus').innerHTML = '<span class="badge badge-neutral">Captura cancelada</span>';
+    },
+    async _enrollSave() {
+        const studentId = document.getElementById('enrollStudentSelect').value;
+        if (this.enrollDescriptors.length === 0) return;
+
+        // Gerar descriptor médio (média das amostras)
+        const avg = new Float32Array(128);
+        this.enrollDescriptors.forEach(d => {
+            for (let i = 0; i < 128; i++) avg[i] += d[i];
+        });
+        for (let i = 0; i < 128; i++) avg[i] /= this.enrollDescriptors.length;
+
+        await StorageManager.saveFace(studentId, avg);
+        const idx = AppState.students.findIndex(s => s.id === studentId);
+        AppState.students[idx].hasFace = true;
+        StorageManager.set('students', AppState.students);
+        AuditLogger.log(AppState.currentOperator, 'FACE_ENROLL', studentId, this.enrollDescriptors.length + ' amostras');
+
+        this._enrollStop();
+        UIRenderer.toast('Template facial salvo!', 'success', 'Dados armazenados localmente (LGPD compliant)');
+        UIRenderer.renderEnroll();
+    },
+
+    // ---------- MÉTODOS ALTERNATIVOS ----------
+    async _pinAccess() {
+        const enroll = document.getElementById('pinEnroll').value.trim();
+        const pin = document.getElementById('pinCode').value.trim();
+        if (!enroll || !pin) { UIRenderer.toast('Preencha matrícula e PIN', 'warning'); return; }
+        const student = AppState.students.find(s => s.enrollment === enroll);
+        if (!student) { UIRenderer.toast('Matrícula não encontrada', 'danger'); return; }
+        if (!student.pinHash) { UIRenderer.toast('PIN não cadastrado. Acesse Admin para configurar.', 'warning'); return; }
+        const hash = await StorageManager.sha256(pin);
+        if (hash !== student.pinHash) { UIRenderer.toast('PIN incorreto', 'danger'); return; }
+
+        const type = AccessController.determineAccessType(student.id);
+        const check = AccessController.checkAccess(student, type);
+        AppState.accessLog.push({
+            timestamp: Date.now(), studentId: student.id, type, method: 'PIN',
+            result: check.result, terminal: 'PIN_TERMINAL'
+        });
+        StorageManager.set('accessLog', AppState.accessLog);
+        AuditLogger.log('pin', 'ACCESS_PIN', student.id, check.result);
+
+        if (check.result === 'VERIFIED' || (check.result === 'OUT_OF_SCHEDULE' && check.soft)) {
+            window.__gate.openGate(`PIN - ${student.name}`);
+            UIRenderer.toast(`Acesso ${type === 'entry' ? 'entrada' : 'saída'} autorizado`, 'success', student.name);
+        } else {
+            window.__gate.denyGate('PIN: ' + check.reason);
+            UIRenderer.toast(check.reason, 'danger');
+        }
+    },
+    _generateQR() {
+        const id = document.getElementById('qrStudentSelect').value;
+        const student = AppState.students.find(s => s.id === id);
+        if (!student) { UIRenderer.toast('Selecione um aluno', 'warning'); return; }
+        // QR Code simples via QR Server API (offline fallback: mostra o token em texto)
+        const token = btoa(JSON.stringify({ id: student.id, ts: Date.now(), nonce: Math.random().toString(36).slice(2) }));
+        const container = document.getElementById('qrDisplay');
+        container.innerHTML = `
+            <div class="card mt-3">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(token)}" alt="QR Code" style="max-width: 100%;">
+                <div class="text-xs text-muted mt-2 font-mono">Token: ${token.slice(0,30)}...</div>
+                <p class="text-xs text-muted mt-1">Válido por 60 segundos. Escaneie no terminal.</p>
+            </div>
+        `;
+        AuditLogger.log(AppState.currentOperator, 'QR_GENERATED', id, student.name);
+    },
+    async _bindRfid() {
+        const uid = document.getElementById('rfidUid').value.trim();
+        if (!uid) { UIRenderer.toast('Informe o UID do cartão', 'warning'); return; }
+        const body = `
+            <div class="form-group"><label class="form-label">Aluno</label>
+                <select class="form-select" id="rfidStudent">${AppState.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+            </div>
+        `;
+        UIRenderer.openModal('Vincular RFID', body, [
+            { label: 'Cancelar' },
+            { label: 'Vincular', class: 'btn-primary', onClick: async () => {
+                const id = document.getElementById('rfidStudent').value;
+                const hash = await StorageManager.sha256(uid.toUpperCase());
+                const idx = AppState.students.findIndex(s => s.id === id);
+                AppState.students[idx].rfidHash = hash;
+                StorageManager.set('students', AppState.students);
+                AuditLogger.log(AppState.currentOperator, 'RFID_BIND', id, uid);
+                UIRenderer.toast('Cartão vinculado', 'success');
+            }}
+        ]);
+    },
+    async _rfidAccess() {
+        const uid = document.getElementById('rfidUid').value.trim();
+        if (!uid) { UIRenderer.toast('Informe o UID', 'warning'); return; }
+        const hash = await StorageManager.sha256(uid.toUpperCase());
+        const student = AppState.students.find(s => s.rfidHash === hash);
+        if (!student) { UIRenderer.toast('Cartão não reconhecido', 'danger'); window.__gate.denyGate('RFID desconhecido'); return; }
+
+        const type = AccessController.determineAccessType(student.id);
+        const check = AccessController.checkAccess(student, type);
+        AppState.accessLog.push({
+            timestamp: Date.now(), studentId: student.id, type, method: 'RFID',
+            result: check.result, terminal: 'RFID_01'
+        });
+        StorageManager.set('accessLog', AppState.accessLog);
+        AuditLogger.log('rfid', 'ACCESS_RFID', student.id, check.result);
+
+        if (check.result === 'VERIFIED' || (check.result === 'OUT_OF_SCHEDULE' && check.soft)) {
+            window.__gate.openGate(`RFID - ${student.name}`);
+            UIRenderer.toast(`Acesso autorizado`, 'success', student.name);
+        } else {
+            window.__gate.denyGate(check.reason);
+            UIRenderer.toast(check.reason, 'danger');
+        }
+    },
+
+    // ---------- PRIVACIDADE ----------
+    async _removeFace() {
+        const id = document.getElementById('privStudentSelect').value;
+        if (!id) { UIRenderer.toast('Selecione um aluno', 'warning'); return; }
+        UIRenderer.confirm('Remover APENAS o template facial deste aluno?', async () => {
+            await StorageManager.removeFace(id);
+            const idx = AppState.students.findIndex(s => s.id === id);
+            AppState.students[idx].hasFace = false;
+            StorageManager.set('students', AppState.students);
+            AuditLogger.log(AppState.currentOperator, 'FACE_REMOVE', id, '');
+            UIRenderer.toast('Template facial removido', 'success');
+            UIRenderer.renderPrivacy();
+        });
+    },
+    _forgetStudent() {
+        const id = document.getElementById('privStudentSelectFull').value;
+        if (!id) { UIRenderer.toast('Selecione um aluno', 'warning'); return; }
+        const student = AppState.students.find(s => s.id === id);
+        UIRenderer.confirm(`🚨 EXCLUIR COMPLETAMENTE ${student.name}?<br><br>Isso removerá: cadastro, template facial, histórico de acessos e referências. Ação IRREVERSÍVEL.`, async () => {
+            await StorageManager.removeFace(id);
+            AppState.students = AppState.students.filter(s => s.id !== id);
+            AppState.accessLog = AppState.accessLog.filter(a => a.studentId !== id);
+            StorageManager.set('students', AppState.students);
+            StorageManager.set('accessLog', AppState.accessLog);
+            AuditLogger.log(AppState.currentOperator, 'FORGET_STUDENT', id, student.name);
+            UIRenderer.toast('Aluno esquecido (LGPD)', 'success');
+            UIRenderer.renderPrivacy();
+        });
+    },
+
+    // ---------- ADMIN ----------
+    async _adminLogin() {
+        const pass = document.getElementById('adminPass').value;
+        const hash = await StorageManager.sha256(pass);
+        if (hash === CONFIG.ADMIN_PASSWORD_HASH) {
+            document.getElementById('adminLoginCard').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            AppState.currentOperator = 'admin';
+            AuditLogger.log('admin', 'ADMIN_LOGIN', 'admin', 'Login administrativo');
+            UIRenderer.toast('Acesso administrativo', 'success');
+        } else {
+            UIRenderer.toast('Senha incorreta', 'danger');
+        }
+    },
+    _export(type) {
+        let data, filename, mime;
+        const now = new Date().toISOString().slice(0,10);
+        if (type === 'students') { data = AppState.students; filename = `alunos_${now}.json`; mime = 'application/json'; }
+        else if (type === 'attendance') {
+            const csv = 'Data,Matricula,Nome,Turma,Tipo,Resultado,Metodo\n' +
+                AppState.accessLog.map(a => {
+                    const s = AppState.students.find(x => x.id === a.studentId);
+                    const c = s ? AppState.classes.find(x => x.id === s.classId) : null;
+                    return `"${new Date(a.timestamp).toLocaleString('pt-BR')}","${s?.enrollment || ''}","${s?.name || ''}","${c?.name || ''}","${a.type}","${a.result}","${a.method}"`;
+                }).join('\n');
+            data = csv; filename = `frequencia_${now}.csv`; mime = 'text/csv';
+        }
+        else if (type === 'access') { data = AppState.accessLog; filename = `acessos_${now}.json`; mime = 'application/json'; }
+        else if (type === 'all') {
+            data = { students: AppState.students, classes: AppState.classes, accessLog: AppState.accessLog, schedules: AppState.schedules, auditLog: AppState.auditLog };
+            filename = `backup_completo_${now}.json`; mime = 'application/json';
+        }
+        const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+        AuditLogger.log(AppState.currentOperator, 'EXPORT', type, filename);
+        UIRenderer.toast('Exportado', 'success', filename);
+    },
+    _import() {
+        const file = document.getElementById('adminImportFile').files[0];
+        if (!file) { UIRenderer.toast('Selecione um arquivo', 'warning'); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                UIRenderer.confirm('Isso substituirá os dados atuais. Continuar?', () => {
+                    if (data.students) { AppState.students = data.students; StorageManager.set('students', AppState.students); }
+                    if (data.classes) { AppState.classes = data.classes; StorageManager.set('classes', AppState.classes); }
+                    if (data.accessLog) { AppState.accessLog = data.accessLog; StorageManager.set('accessLog', AppState.accessLog); }
+                    if (data.schedules) { AppState.schedules = data.schedules; StorageManager.set('schedules', AppState.schedules); }
+                    AuditLogger.log('admin', 'IMPORT', 'all', file.name);
+                    UIRenderer.toast('Dados importados', 'success');
+                    UIRenderer.switchView('dashboard');
+                });
+            } catch (err) { UIRenderer.toast('Arquivo inválido', 'danger'); }
+        };
+        reader.readAsText(file);
+    },
+    _clean(type) {
+        UIRenderer.confirm(`⚠️ Operação: ${type.toUpperCase()}. Deseja prosseguir?`, async () => {
+            if (type === 'history') {
+                AppState.accessLog = [];
+                StorageManager.set('accessLog', []);
+            } else if (type === 'faces') {
+                await StorageManager.clearAllFaces();
+                AppState.students.forEach(s => s.hasFace = false);
+                StorageManager.set('students', AppState.students);
+            } else if (type === 'all') {
+                localStorage.clear();
+                await StorageManager.clearAllFaces();
+                location.reload();
+                return;
+            }
+            AuditLogger.log('admin', 'CLEAN_' + type.toUpperCase(), type, '');
+            UIRenderer.toast('Limpeza concluída', 'success');
+            UIRenderer.switchView(AppState.currentView);
+        });
+    }
+};
+
+/* ============================================================
+   10. SERVICE WORKER (PWA/OFFLINE)
+   Registro inline via blob URL (fallback se bloqueado).
+   ============================================================ */
+async function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+        const swCode = `
+            const CACHE = 'acessoEdu-v1';
+            self.addEventListener('install', e => { self.skipWaiting(); });
+            self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+            self.addEventListener('fetch', e => {
+                if (e.request.method !== 'GET') return;
+                e.respondWith(
+                    caches.open(CACHE).then(async cache => {
+                        try {
+                            const res = await fetch(e.request);
+                            if (res.ok) cache.put(e.request, res.clone());
+                            return res;
+                        } catch {
+                            const cached = await cache.match(e.request);
+                            return cached || new Response('Offline', { status: 503 });
+                        }
+                    })
+                );
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        await navigator.serviceWorker.register(url).catch(() => {
+            // Alguns navegadores bloqueiam blob SW; falha silenciosa
+            console.info('SW inline não suportado - cache manual recomendado');
+        });
+    } catch (e) { console.warn('SW registration failed', e); }
+}
+
+/* ============================================================
+   11. INICIALIZAÇÃO
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+    await App.init();
+    registerSW();
+});
+</script>
+
+</body>
+</html>
