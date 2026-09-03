@@ -1,2 +1,2 @@
-# sistemaGestaoEntradaClaude
-sistema de catraca biométria facial, criada com claudeAI
+# sistemaGestaoEntrada
+sistema de catraca biométria facial, criada com AI generativa
